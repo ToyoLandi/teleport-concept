@@ -67,7 +67,7 @@ def update_pkg_manager():
     # TODO - check host os package manager in use (dnf, yum, apt-get) & update
     process = subprocess.Popen(['dnf', 'update', '-y'], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
-    print(stdout)
+    #print(stdout)
     if process.returncode != 0: 
         raise subprocess.CalledProcessError(process.returncode, 'dnf', stderr)
 
@@ -81,7 +81,7 @@ def install_pip():
     pkg = 'python3.12-pip'
     process = subprocess.Popen(['dnf', 'install', pkg, '-y'], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
-    print(stdout)
+    #print(stdout)
     if process.returncode != 0: 
         raise subprocess.CalledProcessError(process.returncode, 'dnf', stderr)
 
@@ -98,7 +98,7 @@ def install_ansible(user:str):
     su_command = 'python3 -m pip install --user ansible-core'
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
-    print(stdout)
+    #print(stdout)
     if process.returncode != 0: 
         print('autoAnsible: ERROR during ansible-core installation.')
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
@@ -154,14 +154,14 @@ def gen_ansible_sshkeys(user:str):
     # wrong persons hands. 
     print(f"autoAnsible: Generating SSH key named '{keyname}' for future Ansible Interactions")
     # Adding the su command inline for easier arg parsing for subprocess.
-    process = subprocess.Popen(['su', user, '-c', 'ssh-keygen', '-f', keyname, '-N', '""', '-q'], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    su_command = f'ssh-keygen -f {keyname} -N "" -q'
+    process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
     print(stdout)
-    print(f"autoAnsible: SSH key named '{keyname}' succesfully created.")
     if process.returncode != 0: 
         print("autoAnsible: ERROR generating SSH key for Ansible")
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
-
+    print(f"autoAnsible: SSH key named '{keyname}' succesfully created.")
     # TODO share the generated keys with the other nodes. 
     
 def _control_node_install():
