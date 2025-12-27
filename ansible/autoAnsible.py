@@ -71,15 +71,14 @@ def update_pkg_manager():
     if process.returncode != 0: 
         raise subprocess.CalledProcessError(process.returncode, 'dnf', stderr)
 
-def install_pip(user:str):
+def install_pip():
     '''
-    This should be ran using the 'ansible' user.
+    This should be ran using the 'root' user.
 
     Runs the `dnf install python3.12-pip -y` process on the host OS shell. 
     '''
-    print("autoAnsible: Installing [pip] via dnf for 'ansible' user")
-    su_command = 'dnf install python3.12-pip -y'
-    process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    print("autoAnsible: Installing [pip] via dnf")
+    process = subprocess.Popen(['dnf', 'install', 'python3.12-pip, -y'], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
     print(stdout)
     if process.returncode != 0: 
@@ -97,7 +96,7 @@ def install_ansible(user:str):
     stdout, stderr = process.communicate()
     print(stdout)
     if process.returncode != 0: 
-        raise subprocess.CalledProcessError(process.returncode, 'dnf', stderr)
+        raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
 
 def _control_node_install():
     '''
@@ -107,11 +106,11 @@ def _control_node_install():
     print('autoAnsible: Starting [control-node] installation!')
     create_user()
     update_pkg_manager()
-    # Note the 'ansible' user declared in the below functions. We expect these
-    # functions to be ran in the context of the 'ansible' user, NOT root/sudo. 
-    # This is critical so we are not deploying pip or our ansible-core package,
-    # into global context. 
-    install_pip('ansible')
+    install_pip()
+    # Note the 'ansible' user declared in the below function. We expect this
+    # function to be ran in the context of the 'ansible' user, NOT root/sudo. 
+    # This is critical so we are not deploying ansible-core package using the
+    # root/sudo account for least-privilege. 
     install_ansible('ansible')
     print('autoAnsible: [control-node] installation COMPLETE!')
 
