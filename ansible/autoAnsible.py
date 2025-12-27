@@ -115,54 +115,22 @@ def install_ansible(user:str):
         print('autoAnsible: ERROR attempting to create Ansible dir.')
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
     
-def mk_ansible_inventory(user:str):
+def pull_ansible_inventory(user:str):
     '''
     Create our "../ansible/hosts" inventory file under the fresh dir we created
-    during install_ansible(). We will POPULATE this inventory and share SSH 
-    keys for interactions in another function named 'stage_ansible_inventory()'
+    during install_ansible(). This will pull the sample from demo repo. 
+    
+    MAKE SURE YOU MODIFY THIS FILE WITH YOUR HOSTNAMES AND IPs! 
     '''
-    print("autoAnsible: creating Ansible 'hosts' file in 'ansible' user-space.")
-    su_command = 'touch $HOME/ansible/hosts'
+    print("autoAnsible: creating Sample Ansible '../ansible/hosts' file w/ user 'ansible'\n" \
+    "\t IMPORTANT: -> MAKE SURE YOU MODIFY THIS FILE WITH YOUR HOSTNAMES AND IPs")
+    hosts_repourl = 'https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/hosts'
+    su_command = (f"curl {hosts_repourl} -o $HOME/ansible/hosts")
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
-    print(stdout)
     if process.returncode != 0: 
-        print("autoAnsible: ERROR attempting to create Ansible 'hosts' file.")
+        print("autoAnsible: ERROR attempting to download Sample Ansible 'hosts' file.")
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)  
-
-def stage_ansible_inventory():
-    '''
-    Function converting user input into a formatted 'hosts' file to be used by
-    ansible as its inventory.
-    '''
-    # We expect the 'hosts' file to reside under '/home/ansible/ansible/hosts'
-    # as created by the install_ansible() func. 
-    hostspath = '/home/ansible/ansible/hosts'
-    print("autoAnsible: Staging the Ansible Inventory File, get your node " \
-    "IP's ready...")
-    if os.path.isfile(hostspath): 
-        # Hosts file is present as expected. 
-        # Check if Hosts path is already populated.
-        if os.path.getsize(hostspath) != 0:
-            print('autoAnsible: Hosts path is already populated with...\n')
-            with open(hostspath) as f:
-                print(f.read())
-        else: 
-            # If host file is empty, take user input to populate. 
-            # We could be very fancy here with user input, but for the demo I
-            # am simply converting the user provided string to a proper list. 
-            # ...We should also be doing better input validation here...
-            print("autoAnsible: [?] What is your Control-nodes hostname and" \
-            " IP? (-> use ['hostname', 10.1.2.3] format, including brackets)...")
-            master_list = list(input())
-            print("autoAnsible: [?] What is your Worker-node(s) hostname and" \
-            " IP(s)? (-> use ['host1', 10.1.2.3, 'host2', 10.1.2.4] format, including brackets)...")
-            worker_list = list(input())
-            print(master_list, worker_list)
-    else: 
-        print("autoAnsible: Hosts file is missing, generating it...")
-        mk_ansible_inventory()
-
 
 def gen_ansible_sshkeys(user:str):
     '''
@@ -171,21 +139,20 @@ def gen_ansible_sshkeys(user:str):
     This is ran for both '--worker-node' and '--control-node' flows as these
     SSH keys will be used trust in place of passwords. 
     '''
-    hostname = os.uname().nodename
+    keyname = (os.uname().nodename) + '_rsa'
     # For the sake of the demo, I am omitting the password declaration when
     # generating the keys (-N ""). For Production deployments, you should use
     # a passphrase for your certs to prevent tampering if they fall into the 
     # wrong persons hands. 
-    print(f"autoAnsible: Generating SSH key named '{hostname}' for future Ansible Interactions")
-    keygen_args = ['ssh-keygen', '-f', hostname, '-N', "", '-q']
+    print(f"autoAnsible: Generating SSH key named '{keyname}' for future Ansible Interactions")
+    keygen_args = ['ssh-keygen', '-f', keyname, '-N', "", '-q']
     process = subprocess.Popen(['su', user, '-c', keygen_args], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
     print(stdout)
-    print(f"autoAnsible: SSH key named '{hostname}' succesfully created.")
+    print(f"autoAnsible: SSH key named '{keyname}' succesfully created.")
     if process.returncode != 0: 
         print("autoAnsible: ERROR generating SSH key for Ansible")
-        raise subprocess.CalledProcessError(process.returncode, 'su', stderr)  
-
+        raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
 
 
 def _control_node_install():
@@ -202,9 +169,11 @@ def _control_node_install():
     # This is critical so we are not deploying ansible-core package using the
     # root/sudo account for least-privilege or confusing file permissions.
     install_ansible('ansible')
-    mk_ansible_inventory('ansible')
-    stage_ansible_inventory('ansible')
-    print('autoAnsible: [control-node] installation COMPLETE!')
+    pull_ansible_inventory('ansible')
+    gen_ansible_sshkeys('ansible')
+    print("autoAnsible: [control-node] installation completed. \n" \
+    "\t Be sure to modify your '../ansible/hosts' file with your specific " \
+    "Hostnames and IPs before running Ansible commands.")
 
 def _worker_node_install():
     '''
@@ -214,7 +183,9 @@ def _worker_node_install():
     print('autoAnsible: Starting [worker-node] installation!')
     create_user()
     update_pkg_manager()
+    gen_ansible_sshkeys('ansible')
     print('autoAnsible: [worker-node] installation COMPLETE!')
+
 
 
 if __name__ == '__main__':
@@ -227,7 +198,7 @@ if __name__ == '__main__':
         # Checking if arguments were used. In this script we expect 3 options... 
         # 1: No args, meaning we should prompt the user if this is a worker or
         #   control node deployment. 
-        # 2: '--control-node' where we will config  user, pip3, and ansible-core
+        # 2: '--control-node' where we will config user, pip3, and ansible-core
         # 3: '--worker-node' where we will config user only. 
         if len(sys.argv) > 1: 
             arg = sys.argv[1]
