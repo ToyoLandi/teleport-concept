@@ -107,8 +107,12 @@ def _control_node_install():
     print('autoAnsible: Starting [control-node] installation!')
     create_user()
     update_pkg_manager()
-    install_pip()
-    install_ansible()
+    # Note the 'ansible' user declared in the below functions. We expect these
+    # functions to be ran in the context of the 'ansible' user, NOT root/sudo. 
+    # This is critical so we are not deploying pip or our ansible-core package,
+    # into global context. 
+    install_pip('ansible')
+    install_ansible('ansible')
     print('autoAnsible: [control-node] installation COMPLETE!')
 
 def _worker_node_install():
@@ -119,6 +123,7 @@ def _worker_node_install():
     print('autoAnsible: Starting [worker-node] installation!')
     create_user()
     update_pkg_manager()
+    print('autoAnsible: [worker-node] installation COMPLETE!')
 
 
 if __name__ == '__main__':
