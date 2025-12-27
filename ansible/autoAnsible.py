@@ -153,8 +153,8 @@ def gen_ansible_sshkeys(user:str):
     # a passphrase for your certs to prevent tampering if they fall into the 
     # wrong persons hands. 
     print(f"autoAnsible: Generating SSH key named '{keyname}' for future Ansible Interactions")
-    keygen_args = ['ssh-keygen', '-f', keyname, '-N', "", '-q']
-    process = subprocess.Popen(['su', user, '-c', keygen_args], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    # Adding the su command inline for easier arg parsing for subprocess.
+    process = subprocess.Popen(['su', user, '-c', 'ssh-keygen', '-f', keyname, '-N', '""', '-q'], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
     print(stdout)
     print(f"autoAnsible: SSH key named '{keyname}' succesfully created.")
@@ -162,7 +162,8 @@ def gen_ansible_sshkeys(user:str):
         print("autoAnsible: ERROR generating SSH key for Ansible")
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
 
-
+    # TODO share the generated keys with the other nodes. 
+    
 def _control_node_install():
     '''
     --control-node' arg is called during install where we will configure our
