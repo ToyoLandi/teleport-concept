@@ -38,8 +38,8 @@ def create_user():
     
     try:
         print(f"autoAnsible: Creating user '{username}'...")
-        # Create user without a home directory
-        subprocess.run(['useradd', username], check=True)
+        # Create user with a home directory
+        subprocess.run(['useradd', username, '-m'], check=True)
         # Set the password using chpasswd (more secure)
         # chpasswd expects input in the format "username:password"
         process = subprocess.Popen(['chpasswd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -52,9 +52,9 @@ def create_user():
         print(f"autoAnsible: [!] Failed to create user: {e.stderr if hasattr(e, 'stderr') else e}")
         # TODO - Handle cleanup without checking home dir, as home dir is not being created
         # Clean up if useradd succeeded but chpasswd failed
-        #if os.path.exists(f"/home/{username}"):
-        #    subprocess.run(['userdel', '-r', username])
-        #    print(f"autoAnsible: [*] Rolled back user creation for '{username}'.")
+        if os.path.exists(f"/home/{username}"):
+            subprocess.run(['userdel', '-r', username])
+            print(f"autoAnsible: [*] Rolled back user creation for '{username}'.")
         sys.exit(1)
 
 def update_pkg_manager():
@@ -91,13 +91,102 @@ def install_ansible(user:str):
 
     Runs the `pip3 install ansible-core --user` process on the host OS shell. 
     '''
+    # First, install ansible-core via pip for the 'ansible' user. Since this
+    # script is initalized using sudo, we need to change our user context then
+    # execute the pip install. We use 'su {user} -c ...' to do so.
     print("autoAnsible: Installing [ansible-core] via pip for 'ansible' user")
     su_command = 'python3 -m pip install --user ansible-core'
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
     print(stdout)
     if process.returncode != 0: 
+        print('autoAnsible: ERROR during ansible-core installation.')
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
+    
+    # Additionally, we need to create the '/home/ansible/ansible' directory since we
+    # used pip to install with our ansible user, we were unable to write to the
+    # default location of "/etc/ansible". 
+    print("autoAnsible: creating Ansible directory in 'ansible' user-space.")
+    su_command = 'mkdir $HOME/ansible'
+    process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    print(stdout)
+    if process.returncode != 0: 
+        print('autoAnsible: ERROR attempting to create Ansible dir.')
+        raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
+    
+def mk_ansible_inventory(user:str):
+    '''
+    Create our "../ansible/hosts" inventory file under the fresh dir we created
+    during install_ansible(). We will POPULATE this inventory and share SSH 
+    keys for interactions in another function named 'stage_ansible_inventory()'
+    '''
+    print("autoAnsible: creating Ansible 'hosts' file in 'ansible' user-space.")
+    su_command = 'touch $HOME/ansible/hosts'
+    process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    print(stdout)
+    if process.returncode != 0: 
+        print("autoAnsible: ERROR attempting to create Ansible 'hosts' file.")
+        raise subprocess.CalledProcessError(process.returncode, 'su', stderr)  
+
+def stage_ansible_inventory():
+    '''
+    Function converting user input into a formatted 'hosts' file to be used by
+    ansible as its inventory.
+    '''
+    # We expect the 'hosts' file to reside under '/home/ansible/ansible/hosts'
+    # as created by the install_ansible() func. 
+    hostspath = '/home/ansible/ansible/hosts'
+    print("autoAnsible: Staging the Ansible Inventory File, get your node " \
+    "IP's ready...")
+    if os.path.isfile(hostspath): 
+        # Hosts file is present as expected. 
+        # Check if Hosts path is already populated.
+        if os.path.getsize(hostspath) != 0:
+            print('autoAnsible: Hosts path is already populated with...\n')
+            with open(hostspath) as f:
+                print(f.read())
+        else: 
+            # If host file is empty, take user input to populate. 
+            # We could be very fancy here with user input, but for the demo I
+            # am simply converting the user provided string to a proper list. 
+            # ...We should also be doing better input validation here...
+            print("autoAnsible: [?] What is your Control-nodes hostname and" \
+            " IP? (-> use ['hostname', 10.1.2.3] format, including brackets)...")
+            master_list = list(input())
+            print("autoAnsible: [?] What is your Worker-node(s) hostname and" \
+            " IP(s)? (-> use ['host1', 10.1.2.3, 'host2', 10.1.2.4] format, including brackets)...")
+            worker_list = list(input())
+            print(master_list, worker_list)
+    else: 
+        print("autoAnsible: Hosts file is missing, generating it...")
+        mk_ansible_inventory()
+
+
+def gen_ansible_sshkeys(user:str):
+    '''
+    This should be ran by the 'ansible' user. We will generate our SSH keys
+    for ansible interactions here. Keys will be named based on the hostname. 
+    This is ran for both '--worker-node' and '--control-node' flows as these
+    SSH keys will be used trust in place of passwords. 
+    '''
+    hostname = os.uname().nodename
+    # For the sake of the demo, I am omitting the password declaration when
+    # generating the keys (-N ""). For Production deployments, you should use
+    # a passphrase for your certs to prevent tampering if they fall into the 
+    # wrong persons hands. 
+    print(f"autoAnsible: Generating SSH key named '{hostname}' for future Ansible Interactions")
+    keygen_args = ['ssh-keygen', '-f', hostname, '-N', "", '-q']
+    process = subprocess.Popen(['su', user, '-c', keygen_args], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    print(stdout)
+    print(f"autoAnsible: SSH key named '{hostname}' succesfully created.")
+    if process.returncode != 0: 
+        print("autoAnsible: ERROR generating SSH key for Ansible")
+        raise subprocess.CalledProcessError(process.returncode, 'su', stderr)  
+
+
 
 def _control_node_install():
     '''
@@ -108,11 +197,13 @@ def _control_node_install():
     create_user()
     update_pkg_manager()
     install_pip()
-    # Note the 'ansible' user declared in the below function. We expect this
-    # function to be ran in the context of the 'ansible' user, NOT root/sudo. 
+    # Note the 'ansible' user declared in the below functions. We expect these
+    # functions to be ran in the context of the 'ansible' user, NOT root/sudo. 
     # This is critical so we are not deploying ansible-core package using the
-    # root/sudo account for least-privilege. 
+    # root/sudo account for least-privilege or confusing file permissions.
     install_ansible('ansible')
+    mk_ansible_inventory('ansible')
+    stage_ansible_inventory('ansible')
     print('autoAnsible: [control-node] installation COMPLETE!')
 
 def _worker_node_install():
