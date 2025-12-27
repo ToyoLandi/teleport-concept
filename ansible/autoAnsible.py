@@ -78,7 +78,8 @@ def install_pip():
     Runs the `dnf install python3.12-pip -y` process on the host OS shell. 
     '''
     print("autoAnsible: Installing [pip] via dnf")
-    process = subprocess.Popen(['dnf', 'install', 'python3.12-pip, -y'], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    pkg = 'python3.12-pip'
+    process = subprocess.Popen(['dnf', 'install', pkg, '-y'], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
     print(stdout)
     if process.returncode != 0: 
