@@ -107,13 +107,20 @@ def install_ansible(user:str):
     # used pip to install with our ansible user, we were unable to write to the
     # default location of "/etc/ansible". 
     print("autoAnsible: creating Ansible directory in 'ansible' user-space.")
-    su_command = 'mkdir $HOME/ansible'
-    process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-    print(stdout)
-    if process.returncode != 0: 
-        print('autoAnsible: ERROR attempting to create Ansible dir.')
-        raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
+    # Checking if ansible dir already exist...
+    dirpath = '$HOME/ansible'
+    checkdir = subprocess.Popen(['[ -f ', dirpath, ' ]'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    if checkdir.returncode != 0: 
+        su_command = f"mkdir {dirpath}"
+        process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        print(stdout)
+        if process.returncode != 0: 
+            print('autoAnsible: ERROR attempting to create Ansible dir.')
+            raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
+    else: 
+        print("autoAnsible: Ansible directory already exist!")
+        return
     
 def pull_ansible_inventory(user:str):
     '''
