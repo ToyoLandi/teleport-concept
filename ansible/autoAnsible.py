@@ -127,6 +127,7 @@ if __name__ == '__main__':
         print("ERROR: Please run this script using 'sudo', " \
         "ex.) 'sudo python3 autoAnsible --worker-node")
         sys.exit(1)
+    else:
         # Checking if arguments were used. In this script we expect 3 options... 
         # 1: No args, meaning we should prompt the user if this is a worker or
         #   control node deployment. 
