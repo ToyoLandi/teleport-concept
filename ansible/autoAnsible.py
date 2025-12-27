@@ -148,13 +148,13 @@ def gen_ansible_sshkeys(user:str):
     SSH keys will be used trust in place of passwords. 
     '''
     keyname = (os.uname().nodename) + '_rsa'
+    keypath = f'~/.ssh/{keyname}'
     # For the sake of the demo, I am omitting the password declaration when
     # generating the keys (-N ""). For Production deployments, you should use
     # a passphrase for your certs to prevent tampering if they fall into the 
     # wrong persons hands. 
-    print(f"autoAnsible: Generating SSH key named '{keyname}' for future Ansible Interactions")
-    # Adding the su command inline for easier arg parsing for subprocess.
-    su_command = f'ssh-keygen -f {keyname} -N "" -q'
+    print(f"autoAnsible: Generating SSH key named '{keyname}' to '{keypath}")
+    su_command = f'ssh-keygen -f {keypath} -N "" -q'
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
     print(stdout)
