@@ -153,6 +153,9 @@ def gen_ansible_sshkeys(user:str):
     # generating the keys (-N ""). For Production deployments, you should use
     # a passphrase for your certs to prevent tampering if they fall into the 
     # wrong persons hands. 
+    if os.path.exists(keypath):
+        print(f"autoAnsible: SSH key '{keyname}' already exist - skipping this step.")
+        return
     print(f"autoAnsible: Generating SSH key named '{keyname}' to '{keypath}'")
     su_command = f'ssh-keygen -f {keypath} -N "" -q'
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
