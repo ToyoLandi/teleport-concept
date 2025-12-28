@@ -49,12 +49,12 @@ def create_user():
         print(f"autoAnsible: User '{username}' created successfully.")
 
     except subprocess.CalledProcessError as e:
-        print(f"autoAnsible: [!] Failed to create user: {e.stderr if hasattr(e, 'stderr') else e}")
+        print(f"autoAnsible: ERROR Failed to create user: {e.stderr if hasattr(e, 'stderr') else e}")
         # TODO - Handle cleanup without checking home dir, as home dir is not being created
         # Clean up if useradd succeeded but chpasswd failed
         if os.path.exists(f"/home/{username}"):
             subprocess.run(['userdel', '-r', username])
-            print(f"autoAnsible: [*] Rolled back user creation for '{username}'.")
+            print(f"autoAnsible: Rolled back user creation for '{username}'.")
         sys.exit(1)
 
 def update_pkg_manager():
@@ -94,7 +94,7 @@ def install_ansible(user:str):
     # First, install ansible-core via pip for the 'ansible' user. Since this
     # script is initalized using sudo, we need to change our user context then
     # execute the pip install. We use 'su {user} -c ...' to do so.
-    print("autoAnsible: Installing [ansible-core] via pip for 'ansible' user")
+    print("autoAnsible: Installing [ansible-core] via pip for 'ansible' user.")
     su_command = 'python3 -m pip install --user ansible-core'
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
@@ -106,11 +106,11 @@ def install_ansible(user:str):
     # Additionally, we need to create the '/home/ansible/ansible' directory since we
     # used pip to install with our ansible user, we were unable to write to the
     # default location of "/etc/ansible". 
-    print("autoAnsible: creating Ansible directory in 'ansible' user-space.")
+    print("autoAnsible: Creating '~/ansible' directory for 'ansible' user.")
     # Checking if ansible dir already exist from a previous run for example...
     dirpath = '/home/ansible/ansible'
     if os.path.exists(dirpath):
-        print("autoAnsible: Ansible directory already exist!")
+        print("autoAnsible: '~/ansible' directory already exist!")
         return
     else:
         # otherwise, create our ansible dir. 
@@ -129,8 +129,7 @@ def pull_ansible_inventory(user:str):
     
     MAKE SURE YOU MODIFY THIS FILE WITH YOUR HOSTNAMES AND IPs! 
     '''
-    print("autoAnsible: Pulling Sample Ansible '../ansible/hosts' file w/ user 'ansible'\n" \
-    "\t IMPORTANT: -> MAKE SURE YOU MODIFY THIS FILE WITH YOUR HOSTNAMES AND IPs")
+    print("autoAnsible: Pulling Sample Ansible '.../ansible/hosts.yaml' 'ansible'")
     hosts_repourl = 'https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/hosts.yaml'
     su_command = (f"curl {hosts_repourl} -o $HOME/ansible/hosts.yaml -s -m 8")
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
@@ -159,7 +158,7 @@ def gen_ansible_sshkeys(user:str):
     su_command = f'ssh-keygen -f {keypath} -N "" -q'
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
-    print(stdout)
+    #print(stdout)
     if process.returncode != 0: 
         print("autoAnsible: ERROR generating SSH key for Ansible")
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
@@ -178,24 +177,22 @@ def distribute_keys(user:str):
     #   steps, but this makes reduces host.yaml extensibility for future 
     #   deployments.
     print('autoAnsible: Please provide the node IPs we wish to share our pubkey too...\n' \
-    '    example $> 10.99.0.11,10.99.0.12')
-    iplist = list(input('>> ').split(","))
-    #print(f'DEBUG: {iplist}')
-    # Now send to declared IPs with `ssh-copy-id` using 'ansible' user.
-
-    # TODO -- subprocess doesnt like interactable commands like `
-    #   ssh-copy-id` as it asks to check fingerprint, and request the
+    '                     example syntax ?> 10.99.0.11,10.99.0.12')
+    iplist = list(input('?> ').split(","))
+    # Now generate commands using declared IPs with `ssh-copy-id` via 'ansible' user.
+    # TODO -- subprocess doesnt like interactable commands like 
+    #   `ssh-copy-id` as it asks to check fingerprint, and request the
     #   remote-host users password to auth adding the keys. instead of
     #   reinventing the wheel, it may be better to just use the term.
     #   ABOVE I will simply paste the preformatted command you should
     #   run outside of the script. 
-    print('autoAnsible: Please run the follow commands manually from your ' \
-    'terminal\n\n')
     if len(iplist) >= 1:
         for ip in iplist:
             command_template = f'su ansible -c ssh-copy-id -i {keypath} {user}@{ip}\n'
-            print(f"{command_template}\n")
             command_list.append(command_template)
+    else: 
+        print("autoAnsible: No node IPs for [ssh-copy-id] commands were provided.")
+    print("autoAnsible: Successfully generated [ssh-copy-id] commands")
     return command_list
 
             #su_command = f'ssh-copy-id -i {keypath} {user}@{ip}'
@@ -205,8 +202,7 @@ def distribute_keys(user:str):
             #    print(f'autoAnsible: ERROR distributing SSH Public Key to {ip}')
             #    raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
             #print(f'autoAnsible: successfully distributed SSH Public Key to {ip}')
-        
-    
+          
 def _control_node_install():
     '''
     --control-node' arg is called during install where we will configure our
@@ -224,13 +220,16 @@ def _control_node_install():
     pull_ansible_inventory('ansible')
     gen_ansible_sshkeys('ansible')
     command_list = distribute_keys('ansible')
-    print("autoAnsible: [control-node] installation completed. \n\n" \
-    "--> 1. Be sure to modify your '../ansible/hosts' file with your specific " \
-    "Hostnames and IPs before running Ansible commands.\n" \
-    "--> 2. To allow for Ansible Connections, Be sure to run the following" \
-    "commands from your terminal to distribute the generated SSH Keys\n")
-    print(command_list)
-
+    print("autoAnsible: [control-node] staging complete! \n\n" \
+    "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" \
+    "    | --> 1. Be sure to modify your '.../ansible/hosts.yaml' file with your |\n" \
+    "    |     specific Hostnames and IPs before running Ansible commands.       |\n" \
+    "    | --> 2. To allow for Ansible Connections, Be sure to run the following |\n" \
+    "    |     commands from your admin-user terminal to distribute the          |\n" \
+    "    |     generated SSH Keys.                                               |\n" \
+    "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" )
+    for cmd in command_list:
+        print(cmd)
 
 def _worker_node_install():
     '''
@@ -242,18 +241,20 @@ def _worker_node_install():
     update_pkg_manager()
     gen_ansible_sshkeys('ansible')
     command_list = distribute_keys('ansible')
-    print('autoAnsible: [worker-node] installation COMPLETE!\n\n' \
-    '--> 1. To allow for Ansible Connections, Be sure to run the following" \
-    "commands from your terminal to distribute the generated SSH Keys\n"')
-    print(command_list)
+    print("autoAnsible: [worker-node] staging complete! \n\n" \
+    "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" \
+    "    | --> 1. To allow for Ansible Connections, Be sure to run the following |\n" \
+    "    |     commands from your admin-user terminal to distribute the          |\n" \
+    "    |     generated SSH Keys.                                               |\n" \
+    "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" )
+    for cmd in command_list:
+        print(cmd)
     
-
-
 
 if __name__ == '__main__':
     # Checking if script was called with sudo as required.
     if 'SUDO_USER' not in os.environ:
-        print("ERROR: Please run this script using 'sudo', " \
+        print("autoAnsible: ERROR Please run this script using 'sudo', " \
         "ex.) 'sudo python3 autoAnsible --worker-node")
         sys.exit(1)
     else:
