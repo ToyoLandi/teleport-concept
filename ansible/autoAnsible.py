@@ -130,10 +130,10 @@ def pull_ansible_inventory(user:str):
     
     MAKE SURE YOU MODIFY THIS FILE WITH YOUR HOSTNAMES AND IPs! 
     '''
-    print("autoAnsible: creating Sample Ansible '../ansible/hosts' file w/ user 'ansible'\n" \
+    print("autoAnsible: Pulling Sample Ansible '../ansible/hosts' file w/ user 'ansible'\n" \
     "\t IMPORTANT: -> MAKE SURE YOU MODIFY THIS FILE WITH YOUR HOSTNAMES AND IPs")
-    hosts_repourl = 'https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/hosts'
-    su_command = (f"curl {hosts_repourl} -o $HOME/ansible/hosts")
+    hosts_repourl = 'https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/hosts.yaml'
+    su_command = (f"curl {hosts_repourl} -o $HOME/ansible/hosts.yaml -s -m 8")
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
     if process.returncode != 0: 
@@ -153,7 +153,7 @@ def gen_ansible_sshkeys(user:str):
     # generating the keys (-N ""). For Production deployments, you should use
     # a passphrase for your certs to prevent tampering if they fall into the 
     # wrong persons hands. 
-    print(f"autoAnsible: Generating SSH key named '{keyname}' to '{keypath}")
+    print(f"autoAnsible: Generating SSH key named '{keyname}' to '{keypath}'")
     su_command = f'ssh-keygen -f {keypath} -N "" -q'
     process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = process.communicate()
@@ -162,7 +162,33 @@ def gen_ansible_sshkeys(user:str):
         print("autoAnsible: ERROR generating SSH key for Ansible")
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
     print(f"autoAnsible: SSH key named '{keyname}' succesfully created.")
-    # TODO share the generated keys with the other nodes. 
+
+def distribute_keys(user:str):
+    '''
+    This function takes the generated SSH keys from gen_ansible_sshkeys and
+    copies them to our other nodes for Ansible future interactions. 
+    '''
+    keyname = (os.uname().nodename) + '_rsa'
+    keypath = f'~/.ssh/{keyname}' + '.pub' #As we are only copying the pubkey.
+    # Take user input on the neighboring nodes where the pubkey should be sent.
+    # TODO, we could pass these values back to the hosts.yaml file to save,
+    #   steps, but this makes reduces host.yaml extensibility for future 
+    #   deployments.
+    print('autoAnsible: Please provide the node IPs we wish to share our pubkey too...\n' \
+    '    example $> 10.99.0.11,10.99.0.12')
+    iplist = list(input('>> ').split(","))
+    print(f'DEBUG: {iplist}')
+    # Now send to declared IPs with `ssh-copy-id` using 'ansible' user.
+    if len(iplist) > 1:
+        for ip in iplist:   
+            su_command = f'ssh-copy-id -i {keypath} {user}@{ip}'
+            process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            stdout, stderr = process.communicate()
+            if process.returncode != 0: 
+                print(f'autoAnsible: ERROR distributing SSH Public Key to {ip}')
+                raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
+            print(f'autoAnsible: successfully distributed SSH Public Key to {ip}')
+        
     
 def _control_node_install():
     '''
@@ -180,6 +206,7 @@ def _control_node_install():
     install_ansible('ansible')
     pull_ansible_inventory('ansible')
     gen_ansible_sshkeys('ansible')
+    distribute_keys('ansible')
     print("autoAnsible: [control-node] installation completed. \n" \
     "\t Be sure to modify your '../ansible/hosts' file with your specific " \
     "Hostnames and IPs before running Ansible commands.")
@@ -193,6 +220,7 @@ def _worker_node_install():
     create_user()
     update_pkg_manager()
     gen_ansible_sshkeys('ansible')
+    distribute_keys('ansible')
     print('autoAnsible: [worker-node] installation COMPLETE!')
 
 
@@ -220,6 +248,3 @@ if __name__ == '__main__':
             "or '--control-node' when using this script.\n " \
             "ex.) sudo python3 autoAnsible.py --worker-node")
             sys.exit(1)
-
-
-        

@@ -8,15 +8,15 @@ Before we can run these Playbooks however, we have to install Ansible, which we 
 
 ## Installing Ansible
 
-Thankfully our minimal Rocky install has Python 3.12 install by default, all that is missing `pip` (pythons package manager) and an explict 'ansible' user to run our playbooks. For convenience we can run the `autoAnisible.py` script located under "ansible/autoAnsible.py" in the repo to configure the Ansible "control node" and "worker-nodes" -OR- run the commands below manually if you'd prefer.
+Thankfully our minimal Rocky install has Python 3.12 install by default, all that is missing `pip` (pythons package manager) and an explict 'ansible' user to run our playbooks. For convenience, run the `autoAnisible.py` script located under "ansible/autoAnsible.py" in the repo to configure the Ansible "control node" and "worker-nodes".
 
 ### Using the `autoAnsible.py` Script
 Fetch the Installer from the public repo
 ```
-curl https://github.com/toyolandi/teleport-challenge/ansible/autoAnsible.py -o autoAnsible.py
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/autoAnsible.py -o autoAnsible.py
 ```
 
-Run the Installer using python3 using the applicable '--control-node' or '--worker-node' arguments. 
+Run the Installer with python3 using the applicable '--control-node' or '--worker-node' arguments. 
 ```
 # use the '--control-node' argument for the "challenger-master" node
 python3 autoAnsible.py --control-node
@@ -25,27 +25,5 @@ python3 autoAnsible.py --control-node
 python3 autoAnsible.py --worker-node
 ```
 
-### Installing Ansible Manually
-First lets update our package repo, and upgrade any available packages after our recent rocky-minimal deployment using the below command **on all three nodes***... 
-```
-sudo dnf update -y
-```
 
-Once completed, install `pip3` (a requirement for Ansible) using the below command **on the `challenger-master` node which will double as our Ansible Control Plane**
-```
-sudo dnf install python3.12-pip -y
-```
-``
-You can check `pip3` is working properly by using the command...
-```
-pip3 --version
-```
 
-...which should return output like...
-```
-pip 23.3.2 from /usr/lib/python3.12/site-packages/pip (python 3.12)
-```
-
-Finally, deploy Ansible (we use using pip3 using command...
-```
-pip3 install ansible --user ansible
