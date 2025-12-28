@@ -164,6 +164,7 @@ def gen_ansible_sshkeys(user:str):
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
     print(f"autoAnsible: SSH key named '{keyname}' succesfully created.")
 
+
 def distribute_keys(user:str):
     '''
     This function takes the generated SSH keys from gen_ansible_sshkeys and
@@ -240,17 +241,7 @@ def _worker_node_install():
     update_pkg_manager()
     #gen_ansible_sshkeys('ansible')
     command_list = distribute_keys('ansible')
-    print("autoAnsible: [worker-node] staging complete! \n\n" \
-    "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" \
-|   "    |   2. To allow for Ansible Connections, Be sure to run the following   |\n" \
-    "    |     commands from the 'ansible' users terminal to distribute the      |\n" \
-    "    |     generated SSH Keys *AFTER* all nodes have been staged.            |\n" \
-    "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" )
-    print('su ansible')
-    for cmd in command_list:
-        print(cmd)
-    print("\n")
-    return
+    print("autoAnsible: [worker-node] staging complete!")
     
 
 if __name__ == '__main__':
