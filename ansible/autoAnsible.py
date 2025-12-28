@@ -172,7 +172,7 @@ def distribute_keys(user:str):
     copies them to our other nodes for Ansible future interactions. 
     '''
     keyname = (os.uname().nodename) + '_rsa'
-    keypath = f'~/.ssh/{keyname}' + '.pub' #As we are only copying the pubkey.
+    keypath = f'/home/{user}/.ssh/{keyname}' + '.pub' #As we are only copying the pubkey.
     # Take user input on the neighboring nodes where the pubkey should be sent.
     # TODO, we could pass these values back to the hosts.yaml file to save,
     #   steps, but this makes reduces host.yaml extensibility for future 
@@ -180,7 +180,7 @@ def distribute_keys(user:str):
     print('autoAnsible: Please provide the node IPs we wish to share our pubkey too...\n' \
     '    example $> 10.99.0.11,10.99.0.12')
     iplist = list(input('>> ').split(","))
-    print(f'DEBUG: {iplist}')
+    #print(f'DEBUG: {iplist}')
     # Now send to declared IPs with `ssh-copy-id` using 'ansible' user.
     if len(iplist) > 1:
         for ip in iplist:   
