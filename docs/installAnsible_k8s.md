@@ -52,10 +52,10 @@ We should now have a 'ansible' non-root user, which can connect to all three nod
 1. From the 'ansible' user terminal, `curl` the "create-kubeUser.yaml" file from this repos "ansible" directory, and modify the user details to match your current root-user (ex. cspears) using `vi` or `nano`
 
 ```
-curl 
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/create-kubeuser.yaml -o ~/ansible/create-kubeuser.yaml
 ```
 Once the playbook aligns with your deployment, run the following ansible-playbook - which will prompt for the password of your admin account you modified on line 2 thanks to the `-K` [argument](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#using-become)
 
 ```
-ansible-playbook -i ~/ansible/hosts.yaml create-kubeuser.yaml -K
+ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/create-kubeuser.yaml -K
 ```
