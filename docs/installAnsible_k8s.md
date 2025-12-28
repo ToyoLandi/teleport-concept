@@ -22,8 +22,17 @@ Run the Installer with python3 using the applicable '--control-node' or '--worke
 python3 autoAnsible.py --control-node
 
 # use the '--worker-node' argument for the "challenger-work-1" and "challenger-worker-2" nodes
-python3 autoAnsible.py --worker-node
+sudo python3 autoAnsible.py --worker-node
 ```
 
+Share the generated key on our "control-node' with our "worker-nodes" after all nodes have been staged - replacing the IPs in brackets with your IPs in use.
+```
+su ansible
+ssh-copy-id -i ~/.ssh/challenger-master_rsa.pub ansible@[10.99.0.11]
+ssh-copy-id -i ~/.ssh/challenger-master_rsa.pub ansible@[10.99.0.12]
+```
 
-
+Test our Ansible connections using the ansible user.
+```
+ansible -i ~/ansible/hosts.yaml all -m ping
+```

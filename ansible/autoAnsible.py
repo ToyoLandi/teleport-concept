@@ -222,7 +222,7 @@ def _control_node_install():
     "    |     Ansible commands.                                                 |\n" \
     "    |   2. To allow for Ansible Connections, Be sure to run the following   |\n" \
     "    |     commands from the 'ansible' users terminal to distribute the      |\n" \
-    "    |     generated SSH Keys.                                               |\n" \
+    "    |     generated SSH Keys *AFTER* all nodes have been staged.            |\n" \
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" )
     print('su ansible')
     for cmd in command_list:
@@ -238,13 +238,13 @@ def _worker_node_install():
     print('autoAnsible: Starting [worker-node] installation!')
     create_user()
     update_pkg_manager()
-    gen_ansible_sshkeys('ansible')
+    #gen_ansible_sshkeys('ansible')
     command_list = distribute_keys('ansible')
     print("autoAnsible: [worker-node] staging complete! \n\n" \
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" \
-    "    |   1. To allow for Ansible Connections, Be sure to run the following   |\n" \
-    "    |     commands from your admin-user terminal to distribute the          |\n" \
-    "    |     generated SSH Keys.                                               |\n" \
+|   "    |   2. To allow for Ansible Connections, Be sure to run the following   |\n" \
+    "    |     commands from the 'ansible' users terminal to distribute the      |\n" \
+    "    |     generated SSH Keys *AFTER* all nodes have been staged.            |\n" \
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" )
     print('su ansible')
     for cmd in command_list:
