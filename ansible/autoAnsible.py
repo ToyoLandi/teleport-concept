@@ -170,7 +170,7 @@ def distribute_keys(user:str):
     copies them to our other nodes for Ansible future interactions. 
     '''
     keyname = (os.uname().nodename) + '_rsa'
-    keypath = f'/home/{user}/.ssh/{keyname}' + '.pub' #As we are only copying the pubkey.
+    keypath = f'~/.ssh/{keyname}' + '.pub' #As we are only copying the pubkey.
     command_list = []
     # Take user input on the neighboring nodes where the pubkey should be sent.
     # TODO, we could pass these values back to the hosts.yaml file to save,
@@ -179,25 +179,17 @@ def distribute_keys(user:str):
     # Now generate commands using declared IPs with `ssh-copy-id` via 'ansible' user.
     # TODO -- subprocess doesnt like interactable commands like 
     #   `ssh-copy-id` as it asks to check fingerprint, and request the
-    #   remote-host users password to auth adding the keys. instead of
-    #   reinventing the wheel, it may be better to just use the term.
-    #   ABOVE I will simply paste the preformatted command you should
-    #   run outside of the script. 
-
-    #su_command = f'ssh-copy-id -i {keypath} {user}@{ip}'
-    #process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-    #stdout, stderr = process.communicate()
-    #if process.returncode != 0: 
-    #    print(f'autoAnsible: ERROR distributing SSH Public Key to {ip}')
-    #    raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
-    #print(f'autoAnsible: successfully distributed SSH Public Key to {ip}')
+    #   remote-host users password to auth adding the keys + ssh likes user 
+    #    context (not su) instead of reinventing the wheel, it may be better
+    #    to just use the term. For the demo lets simply paste the preformatted
+    #    command you should run outside of the script as the 'ansible' user.
 
     print('autoAnsible: Please provide the node IPs we wish to share our pubkey too...\n' \
     '                   [ syntax ?> 10.99.0.11,10.99.0.12 ]')
     iplist = list(input('?> ').split(","))
     if len(iplist) >= 1:
         for ip in iplist:
-            command_template = f'su ansible -c "ssh-copy-id -i {keypath} {user}@{ip}"'
+            command_template = f'ssh-copy-id -i {keypath} {user}@{ip}'
             command_list.append(command_template)
     else: 
         print("autoAnsible: No node IPs for [ssh-copy-id] commands were provided.")
@@ -229,11 +221,14 @@ def _control_node_install():
     "    |     file with your specific Hostnames, IPs, etc before running        |\n" \
     "    |     Ansible commands.                                                 |\n" \
     "    |   2. To allow for Ansible Connections, Be sure to run the following   |\n" \
-    "    |     commands from your admin-user terminal to distribute the          |\n" \
+    "    |     commands from the 'ansible' users terminal to distribute the      |\n" \
     "    |     generated SSH Keys.                                               |\n" \
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" )
+    print('su ansible')
     for cmd in command_list:
         print(cmd)
+    print("\n")
+    return
 
 def _worker_node_install():
     '''
@@ -251,8 +246,11 @@ def _worker_node_install():
     "    |     commands from your admin-user terminal to distribute the          |\n" \
     "    |     generated SSH Keys.                                               |\n" \
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" )
+    print('su ansible')
     for cmd in command_list:
         print(cmd)
+    print("\n")
+    return
     
 
 if __name__ == '__main__':
