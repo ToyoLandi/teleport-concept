@@ -122,7 +122,6 @@ def install_ansible(user:str):
             print('autoAnsible: ERROR attempting to create Ansible dir.')
             raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
 
-    
 def pull_ansible_inventory(user:str):
     '''
     Create our "../ansible/hosts" inventory file under the fresh dir we created
@@ -173,6 +172,7 @@ def distribute_keys(user:str):
     '''
     keyname = (os.uname().nodename) + '_rsa'
     keypath = f'/home/{user}/.ssh/{keyname}' + '.pub' #As we are only copying the pubkey.
+    command_list = []
     # Take user input on the neighboring nodes where the pubkey should be sent.
     # TODO, we could pass these values back to the hosts.yaml file to save,
     #   steps, but this makes reduces host.yaml extensibility for future 
@@ -182,15 +182,29 @@ def distribute_keys(user:str):
     iplist = list(input('>> ').split(","))
     #print(f'DEBUG: {iplist}')
     # Now send to declared IPs with `ssh-copy-id` using 'ansible' user.
-    if len(iplist) > 1:
-        for ip in iplist:   
-            su_command = f'ssh-copy-id -i {keypath} {user}@{ip}'
-            process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-            stdout, stderr = process.communicate()
-            if process.returncode != 0: 
-                print(f'autoAnsible: ERROR distributing SSH Public Key to {ip}')
-                raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
-            print(f'autoAnsible: successfully distributed SSH Public Key to {ip}')
+
+    # TODO -- subprocess doesnt like interactable commands like `
+    #   ssh-copy-id` as it asks to check fingerprint, and request the
+    #   remote-host users password to auth adding the keys. instead of
+    #   reinventing the wheel, it may be better to just use the term.
+    #   ABOVE I will simply paste the preformatted command you should
+    #   run outside of the script. 
+    print('autoAnsible: Please run the follow commands manually from your ' \
+    'terminal\n\n')
+    if len(iplist) >= 1:
+        for ip in iplist:
+            command_template = f'su ansible -c ssh-copy-id -i {keypath} {user}@{ip}\n'
+            print(f"{command_template}\n")
+            command_list.append(command_template)
+    return command_list
+
+            #su_command = f'ssh-copy-id -i {keypath} {user}@{ip}'
+            #process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            #stdout, stderr = process.communicate()
+            #if process.returncode != 0: 
+            #    print(f'autoAnsible: ERROR distributing SSH Public Key to {ip}')
+            #    raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
+            #print(f'autoAnsible: successfully distributed SSH Public Key to {ip}')
         
     
 def _control_node_install():
@@ -209,10 +223,14 @@ def _control_node_install():
     install_ansible('ansible')
     pull_ansible_inventory('ansible')
     gen_ansible_sshkeys('ansible')
-    distribute_keys('ansible')
-    print("autoAnsible: [control-node] installation completed. \n" \
-    "\t Be sure to modify your '../ansible/hosts' file with your specific " \
-    "Hostnames and IPs before running Ansible commands.")
+    command_list = distribute_keys('ansible')
+    print("autoAnsible: [control-node] installation completed. \n\n" \
+    "--> 1. Be sure to modify your '../ansible/hosts' file with your specific " \
+    "Hostnames and IPs before running Ansible commands.\n" \
+    "--> 2. To allow for Ansible Connections, Be sure to run the following" \
+    "commands from your terminal to distribute the generated SSH Keys\n")
+    print(command_list)
+
 
 def _worker_node_install():
     '''
@@ -223,8 +241,12 @@ def _worker_node_install():
     create_user()
     update_pkg_manager()
     gen_ansible_sshkeys('ansible')
-    distribute_keys('ansible')
-    print('autoAnsible: [worker-node] installation COMPLETE!')
+    command_list = distribute_keys('ansible')
+    print('autoAnsible: [worker-node] installation COMPLETE!\n\n' \
+    '--> 1. To allow for Ansible Connections, Be sure to run the following" \
+    "commands from your terminal to distribute the generated SSH Keys\n"')
+    print(command_list)
+    
 
 
 
