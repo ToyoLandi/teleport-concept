@@ -148,7 +148,7 @@ def gen_ansible_sshkeys(user:str):
     SSH keys will be used trust in place of passwords. 
     '''
     keyname = (os.uname().nodename) + '_rsa'
-    keypath = f'~/.ssh/{keyname}'
+    keypath = f'/home/{user}/.ssh/{keyname}'
     # For the sake of the demo, I am omitting the password declaration when
     # generating the keys (-N ""). For Production deployments, you should use
     # a passphrase for your certs to prevent tampering if they fall into the 
