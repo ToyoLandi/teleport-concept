@@ -176,9 +176,6 @@ def distribute_keys(user:str):
     # TODO, we could pass these values back to the hosts.yaml file to save,
     #   steps, but this makes reduces host.yaml extensibility for future 
     #   deployments.
-    print('autoAnsible: Please provide the node IPs we wish to share our pubkey too...\n' \
-    '                     example syntax ?> 10.99.0.11,10.99.0.12')
-    iplist = list(input('?> ').split(","))
     # Now generate commands using declared IPs with `ssh-copy-id` via 'ansible' user.
     # TODO -- subprocess doesnt like interactable commands like 
     #   `ssh-copy-id` as it asks to check fingerprint, and request the
@@ -186,22 +183,28 @@ def distribute_keys(user:str):
     #   reinventing the wheel, it may be better to just use the term.
     #   ABOVE I will simply paste the preformatted command you should
     #   run outside of the script. 
+
+    #su_command = f'ssh-copy-id -i {keypath} {user}@{ip}'
+    #process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    #stdout, stderr = process.communicate()
+    #if process.returncode != 0: 
+    #    print(f'autoAnsible: ERROR distributing SSH Public Key to {ip}')
+    #    raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
+    #print(f'autoAnsible: successfully distributed SSH Public Key to {ip}')
+
+    print('autoAnsible: Please provide the node IPs we wish to share our pubkey too...\n' \
+    '                   [ syntax ?> 10.99.0.11,10.99.0.12 ]')
+    iplist = list(input('?> ').split(","))
     if len(iplist) >= 1:
         for ip in iplist:
-            command_template = f'su ansible -c ssh-copy-id -i {keypath} {user}@{ip}\n'
+            command_template = f'su ansible -c "ssh-copy-id -i {keypath} {user}@{ip}"'
             command_list.append(command_template)
     else: 
         print("autoAnsible: No node IPs for [ssh-copy-id] commands were provided.")
     print("autoAnsible: Successfully generated [ssh-copy-id] commands")
     return command_list
 
-            #su_command = f'ssh-copy-id -i {keypath} {user}@{ip}'
-            #process = subprocess.Popen(['su', user, '-c', su_command], text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-            #stdout, stderr = process.communicate()
-            #if process.returncode != 0: 
-            #    print(f'autoAnsible: ERROR distributing SSH Public Key to {ip}')
-            #    raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
-            #print(f'autoAnsible: successfully distributed SSH Public Key to {ip}')
+
           
 def _control_node_install():
     '''
@@ -222,9 +225,10 @@ def _control_node_install():
     command_list = distribute_keys('ansible')
     print("autoAnsible: [control-node] staging complete! \n\n" \
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" \
-    "    | --> 1. Be sure to modify your '.../ansible/hosts.yaml' file with your |\n" \
-    "    |     specific Hostnames and IPs before running Ansible commands.       |\n" \
-    "    | --> 2. To allow for Ansible Connections, Be sure to run the following |\n" \
+    "    |   1. Be sure to modify the 'ansible' users '~/ansible/hosts.yaml'     |\n" \
+    "    |     file with your specific Hostnames, IPs, etc before running        |\n" \
+    "    |     Ansible commands.                                                 |\n" \
+    "    |   2. To allow for Ansible Connections, Be sure to run the following   |\n" \
     "    |     commands from your admin-user terminal to distribute the          |\n" \
     "    |     generated SSH Keys.                                               |\n" \
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" )
@@ -243,7 +247,7 @@ def _worker_node_install():
     command_list = distribute_keys('ansible')
     print("autoAnsible: [worker-node] staging complete! \n\n" \
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" \
-    "    | --> 1. To allow for Ansible Connections, Be sure to run the following |\n" \
+    "    |   1. To allow for Ansible Connections, Be sure to run the following   |\n" \
     "    |     commands from your admin-user terminal to distribute the          |\n" \
     "    |     generated SSH Keys.                                               |\n" \
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" )
