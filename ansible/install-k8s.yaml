@@ -1,7 +1,7 @@
 ---
 - hosts: all
-  become: yes
   become_user: cspears
+  become_method: su
   gather_facts: yes
   connection: ssh
   tasks:
@@ -108,7 +108,7 @@
      - name: k8s > Install kubelet, and kubeadm to all nodes
        shell: |
                sudo dnf install -y kubelet kubeadm
-               
+
      - name: k8s > Install kubectl to control-plane
        when: inventory_hostname in groups['masters']
        shell: |
