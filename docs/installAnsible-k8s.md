@@ -1,8 +1,6 @@
 # Deploying Kubernetes using Ansible Playbooks.
 
-With your VMs now running and connected to the Network, its time to prepare our Virtual Machines for our Kubernetes deployment. 
-
-Instead of doing all of this "foundational" work by running a few to many commands directly on the shell of all three nodes, we will instead leverage Ansible (a open-source IaC tool) to do the configuration for us using "playbooks". Luckily, in this repo under the 'ansible' directory you will find 'install-k8s.yaml' which is our playbook for our kubeadm k8s deployment. 
+With your VMs now running and connected to the Network, its time to prepare our Virtual Machines for our Kubernetes deployment. Instead of doing all of this "foundational" work by running a few to many commands directly on the shell of all three nodes, we will instead leverage Ansible (a open-source IaC tool) to do the configuration for us using "playbooks". Luckily, in this repo under the 'ansible' directory you will find 'install-k8s.yaml' which is our playbook for our kubeadm k8s deployment. 
 
 Before we can run these Playbooks however, we have to install Ansible.
 
@@ -53,15 +51,16 @@ ansible -i ~/ansible/hosts.yaml all -m ping
 
 We should now have a 'ansible' non-root user, which can connect to all three nodes - our soon to be k8s control-plane and two worker nodes, using a custom certificate. Now we can use Ansible Playbooks to quickly...
 
-- Disable Swap
-- Install containerd + repo requirements
-- Configure Host Networking for containerd
-- Install kubeadm, kubelet, and kubectl + repo requirements 
+- Disable Swap and SELinux as requested by the kubeadm docs.
+- Install containerd, runc, + configure the containerd to use systemd as its cgroup driver.
+- Configure kernel host, and firewall networking configurations to prepare for k8s.
+- Importantly, Install kubeadm, kubelet, and kubectl.
 
 1. `curl` the "install-k8s.yaml" playbook file from this repos "ansible" directory, 
 ```
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/install-k8s.yaml -o ~/ansible/install-k8s.yaml 
 ```
+> This a great reference to see all the commands we use to config/deploy k8s in once place.
 
 2. Using `vi` or `nano` , Modify the user details (line 6) to match your current root-user (ex. cspears).
 ```

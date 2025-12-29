@@ -85,7 +85,7 @@
                dnf makecache
                dnf install -y containerd.io
                mkdir -p /etc/containerd
-               containerd config default | tee /etc/containerd/config.toml
+               curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/containerd/config.toml -o /etc/containerd/config.toml
                systemctl restart containerd
 
      - name: k8s > Create kubernetes repo file
@@ -99,12 +99,11 @@
          block: |
                 [kubernetes]
                 name=Kubernetes
-                baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+                baseurl=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/
                 enabled=1
                 gpgcheck=1
-                repo_gpgcheck=1
-                gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-
+                gpgkey=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/repodata/repomd.xml.key
+                exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
      - name: k8s > Install kubelet, and kubeadm to all nodes
        shell: |
                dnf install -y kubelet kubeadm
