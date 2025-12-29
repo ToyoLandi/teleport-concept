@@ -1,10 +1,10 @@
 # Deploying Kubernetes using Ansible Playbooks.
 
-With your VMs now running and connected to the Network, its time to prepare our Virtual Machines for our Kubernetes deployment. Kubernetes has a few Host OS configurations which we will take care of in this section, notably disabling SWAP, some firewall exceptions, and installing our Container Runtime to be used by the Container Runtime Interface (CRI) later. 
+With your VMs now running and connected to the Network, its time to prepare our Virtual Machines for our Kubernetes deployment. 
 
-Instead of doing all of this "foundational" work by running a few to many commands directly on the shell of all three nodes, we will instead leverage Ansible (a open-source IaC tool) to do the configuration for us using "playbooks". Luckily, in this repo under the 'ansible' directory you will find two pre-written playbooks (masternode-pb.yaml, workernode-pb.yaml) which will save you writing these yourself. 
+Instead of doing all of this "foundational" work by running a few to many commands directly on the shell of all three nodes, we will instead leverage Ansible (a open-source IaC tool) to do the configuration for us using "playbooks". Luckily, in this repo under the 'ansible' directory you will find 'install-k8s.yaml' which is our playbook for our kubeadm k8s deployment. 
 
-Before we can run these Playbooks however, we have to install Ansible, which we will do via Python3! Lets dive in.
+Before we can run these Playbooks however, we have to install Ansible.
 
 ## Installing Ansible
 
@@ -51,7 +51,7 @@ We should now have a 'ansible' non-root user, which can connect to all three nod
 
 1. `curl` the "install-k8s.yaml" playbook file from this repos "ansible" directory, 
 ```
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/create-kubeuser.yaml -o ~/ansible/install-k8s.yaml 
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/install-k8s.yaml -o ~/ansible/install-k8s.yaml 
 ```
 
 2. Using `vi` or `nano` , Modify the user details (line 6) to match your current root-user (ex. cspears).
