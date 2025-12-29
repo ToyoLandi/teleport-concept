@@ -1,18 +1,19 @@
 ---
 - hosts: all
-  become_user: cspears
-  become_method: sudo
+  become: true
+  become_user: root
+  become_method: su
   connection: ssh
   tasks:
      - name: Host > Disable swap
        shell: |
-               sudo swapoff -a
-               sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+               swapoff -a
+               sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
      - name: Host > Disable SELinux
        shell: |
-               sudo setenforce 0
-               sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+               setenforce 0
+               sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
      - name: Host > Add hostnames from Ansible inventory to /etc/hosts
        lineinfile:
@@ -26,24 +27,24 @@
      - name: firewalld > stage firewall exceptions for k8s control-plane
        when: inventory_hostname in groups['masters']
        shell: |
-               sudo firewall-cmd --zone=public --add-port=6443/tcp
-               sudo firewall-cmd --zone=public --add-port=2379-2380/tcp
-               sudo firewall-cmd --zone=public --add-port=10250/tcp
-               sudo firewall-cmd --zone=public --add-port=10259/tcp
-               sudo firewall-cmd --zone=public --add-port=10257/tcp   
+               firewall-cmd --zone=public --add-port=6443/tcp
+               firewall-cmd --zone=public --add-port=2379-2380/tcp
+               firewall-cmd --zone=public --add-port=10250/tcp
+               firewall-cmd --zone=public --add-port=10259/tcp
+               firewall-cmd --zone=public --add-port=10257/tcp   
 
      - name: firewalld > Stage firewall exceptions for k8s workers
        when: inventory_hostname in groups['workers']
        shell: |
-               sudo firewall-cmd --zone=public --add-port=10250/tcp
-               sudo firewall-cmd --zone=public --add-port=10256/tcp
-               sudo firewall-cmd --zone=public --add-port=30000-32767/tcp
-               sudo firewall-cmd --zone=public --add-port=30000-32767/udp
+               firewall-cmd --zone=public --add-port=10250/tcp
+               firewall-cmd --zone=public --add-port=10256/tcp
+               firewall-cmd --zone=public --add-port=30000-32767/tcp
+               firewall-cmd --zone=public --add-port=30000-32767/udp
 
      - name: firewalld > Commit and apply firewall exceptions
        shell: |
-               sudo firewall-cmd --runtime-to-permanent
-               sudo firewall-cmd --reload     
+               firewall-cmd --runtime-to-permanent
+               firewall-cmd --reload     
 
      - name: containerd > Create .conf file for modules-load.d
        file:
@@ -59,8 +60,8 @@
 
      - name: containerd > Add kernel modules via modprobe
        shell: |
-               sudo modprobe overlay
-               sudo modprobe br_netfilter
+               modprobe overlay
+               modprobe br_netfilter
 
      - name: containerd > Create k8s-cri networking conf file
        file:
@@ -76,16 +77,16 @@
                 net.bridge.bridge-nf-call-ip6tables = 1
 
      - name: containerd > Apply networking configurations via sysctl
-       command: sudo sysctl --system
+       command: sysctl --system
 
      - name: containerd > Install and configure containerd (w/ systemd)
        shell: |
-               sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-               sudo dnf makecache
-               sudo dnf install -y containerd.io
-               sudo mkdir -p /etc/containerd
-               sudo containerd config default | sudo tee /etc/containerd/config.toml
-               sudo systemctl restart containerd
+               dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+               dnf makecache
+               dnf install -y containerd.io
+               mkdir -p /etc/containerd
+               containerd config default | tee /etc/containerd/config.toml
+               systemctl restart containerd
 
      - name: k8s > Create kubernetes repo file
        file:
@@ -106,9 +107,9 @@
 
      - name: k8s > Install kubelet, and kubeadm to all nodes
        shell: |
-               sudo dnf install -y kubelet kubeadm
+               dnf install -y kubelet kubeadm
 
      - name: k8s > Install kubectl to control-plane
        when: inventory_hostname in groups['masters']
        shell: |
-               sudo dnf install -y kubectl
+               dnf install -y kubectl

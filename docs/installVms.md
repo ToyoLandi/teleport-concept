@@ -22,9 +22,9 @@ Happy to give Rocky a go? Here is how we configure our VM's.
 	  
 	  B. Under Network & Hostname > Declare the Host Name citing the table in step 2, and declare the applicable Static IP, Subnet Mask and DNS servers (if DHCP reservations are not possible) 
 	  
-	  C. Confirm the "Root Account" is disabled to avoid anonymous root access.
+	  C. Confirm the "Root Account" is enabled.
 	  
-	  D. Create the user who will be our "Admin" account for this node with a proper name (again, to prevent an anonymous user) and acceptably strong password -- **Be sure the "Add Administrative privileges..." box and "Require a password to use this account" box are checked**
+	  D. Create the user who will be our "sudo" account for this node with a proper name (again, to prevent an anonymous user-logins with SSH) and acceptably strong password -- **Be sure the "Add Administrative privileges..." box and "Require a password to use this account" box are checked**
 
 5. Finally, Launch our Installation using the "Begin Installation" Button on the bottom right -rebooting the VM's with the "Reboot System" button once the installer completes! If you haven't already, repeat steps 3 + 4 for our other "challenger-worker-1" and "challenger-worker-2" nodes adjusting the Host Name and IP addressing as necessary. 
    
