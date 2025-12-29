@@ -104,11 +104,13 @@
                 gpgcheck=1
                 gpgkey=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/repodata/repomd.xml.key
                 exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+                
      - name: k8s > Install kubelet, and kubeadm to all nodes
        shell: |
-               dnf install -y kubelet kubeadm
+               dnf install -y kubelet kubeadm --disableexcludes=kubernetes
+               systemctl enable --now kubelet
 
      - name: k8s > Install kubectl to control-plane
        when: inventory_hostname in groups['masters']
        shell: |
-               dnf install -y kubectl
+               dnf install -y kubectl --disableexcludes=kubernetes
