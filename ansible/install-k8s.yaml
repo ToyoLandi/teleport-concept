@@ -1,0 +1,116 @@
+---
+- hosts: all
+  remote_user: ansible
+  become: yes
+  become_method: sudo
+  become_user: cspears
+  gather_facts: yes
+  connection: ssh
+  tasks:
+     - name: Host > Disable swap
+       shell: |
+               sudo swapoff -a
+               sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+     - name: Host > Disable SELinux
+       shell: |
+               sudo setenforce 0
+               sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+     - name: Host > Add hostnames from Ansible inventory to /etc/hosts
+       lineinfile:
+         dest: /etc/hosts
+         regexp: '.*{{ item }}$'
+         line: "{{ hostvars[item].ansible_host }} {{item}}"
+         state: present
+         when: hostvars[item].ansible_host is defined
+       with_items: "{{ groups.all }}"
+
+     - name: firewalld > stage firewall exceptions for k8s control-plane
+       when: inventory_hostname in groups['masters']
+       shell: |
+               sudo firewall-cmd --zone=public --add-port=6443/tcp
+               sudo firewall-cmd --zone=public --add-port=2379-2380/tcp
+               sudo firewall-cmd --zone=public --add-port=10250/tcp
+               sudo firewall-cmd --zone=public --add-port=10259/tcp
+               sudo firewall-cmd --zone=public --add-port=10257/tcp   
+
+     - name: firewalld > Stage firewall exceptions for k8s workers
+       when: inventory_hostname in groups['workers']
+       shell: |
+               sudo firewall-cmd --zone=public --add-port=10250/tcp
+               sudo firewall-cmd --zone=public --add-port=10256/tcp
+               sudo firewall-cmd --zone=public --add-port=30000-32767/tcp
+               sudo firewall-cmd --zone=public --add-port=30000-32767/udp
+
+     - name: firewalld > Commit and apply firewall exceptions
+       shell: |
+               sudo firewall-cmd --runtime-to-permanent
+               sudo firewall-cmd --reload     
+
+     - name: containerd > Create .conf file for modules-load.d
+       file:
+         path: "/etc/modules-load.d/containerd.conf"
+         state: "touch"
+
+     - name: containerd > Write config to modules-load.d .conf file
+       blockinfile:
+         path: "/etc/modules-load.d/containerd.conf"
+         block: |
+               overlay
+               br_netfilter
+
+     - name: containerd > Add kernel modules via modprobe
+       shell: |
+               sudo modprobe overlay
+               sudo modprobe br_netfilter
+
+     - name: containerd > create networking conf file
+       file:
+         path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+         state: "touch"
+
+     - name: containerd > populate networking conf file
+       blockinfile:
+         path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+         block: |
+                net.bridge.bridge-nf-call-iptables = 1
+                net.ipv4.ip_forward = 1
+                net.bridge.bridge-nf-call-ip6tables = 1
+
+     - name: containerd > apply configurations via sysctl
+       command: sudo sysctl --system
+
+     - name: containerd > add docker repo, install and configure containerd
+       shell: |
+               sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+               sudo dnf makecache
+               sudo dnf install -y containerd.io
+               sudo mkdir -p /etc/containerd
+               sudo containerd config default | sudo tee /etc/containerd/config.toml
+               sudo systemctl restart containerd
+
+     - name: k8s > create kubernetes repo file
+       file:
+         path: "/etc/yum.repos.d/kubernetes.repo"
+         state: "touch"
+
+     - name: k8s > write repository information to the kubernetes repo file
+       blockinfile:
+         path: "/etc/yum.repos.d/kubernetes.repo"
+         block: |
+                [kubernetes]
+                name=Kubernetes
+                baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+                enabled=1
+                gpgcheck=1
+                repo_gpgcheck=1
+                gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+     - name: k8s > Install kubelet, and kubeadm to all nodes
+       shell: |
+               sudo dnf install -y kubelet kubeadm
+     - name: k8s > Install kubectl to control-plane
+       when: inventory_hostname in groups['masters']
+       shell: |
+               sudo dnf install -y kubectl
