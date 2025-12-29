@@ -12,6 +12,15 @@ Thankfully our minimal Rocky install has Python 3.12 install by default, all tha
 
 ### Using the `autoAnsible.py` Script
 
+Open three terminals and SSH into each new VM for the first time from your local machine - changing the user and IPs to match your deployment.
+```
+ssh cspears@10.99.0.10
+
+ssh cspears@10.99.0.11
+
+ssh cspears@10.99.0.12
+```
+
 Fetch the Installer from the public repo
 ```
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/autoAnsible.py -o autoAnsible.py

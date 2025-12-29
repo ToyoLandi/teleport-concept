@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: masters, workers
   become: true
   become_user: root
   become_method: su
@@ -21,7 +21,7 @@
          regexp: '.*{{ item }}$'
          line: "{{ hostvars[item].ansible_host }} {{item}}"
          state: present
-         when: hostvars[item].ansible_host is defined
+       when: hostvars[item].ansible_host is defined
        with_items: "{{ groups.all }}"
 
      - name: firewalld > stage firewall exceptions for k8s control-plane

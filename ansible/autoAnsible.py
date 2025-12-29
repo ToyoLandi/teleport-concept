@@ -162,7 +162,8 @@ def gen_ansible_sshkeys(user:str):
     if process.returncode != 0: 
         print("autoAnsible: ERROR generating SSH key for Ansible")
         raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
-    print(f"autoAnsible: SSH key named '{keyname}' succesfully created.")
+    else:
+        print(f"autoAnsible: SSH key named '{keyname}' succesfully created.")
 
 
 def distribute_keys(user:str):
@@ -220,7 +221,7 @@ def _control_node_install():
     "    |=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|\n" \
     "    |   1. Be sure to modify the 'ansible' users '~/ansible/hosts.yaml'     |\n" \
     "    |     file with your specific Hostnames, IPs, etc before running        |\n" \
-    "    |     Ansible commands.                                                 |\n" \
+    "    |     any Ansible commands.                                             |\n" \
     "    |   2. To allow for Ansible Connections, Be sure to run the following   |\n" \
     "    |     commands from the 'ansible' users terminal to distribute the      |\n" \
     "    |     generated SSH Keys *AFTER* all nodes have been staged.            |\n" \
@@ -240,7 +241,7 @@ def _worker_node_install():
     create_user()
     update_pkg_manager()
     #gen_ansible_sshkeys('ansible')
-    command_list = distribute_keys('ansible')
+    #command_list = distribute_keys('ansible')
     print("autoAnsible: [worker-node] staging complete!")
     
 
