@@ -1,8 +1,7 @@
 ---
 - hosts: all
   become_user: cspears
-  become_method: su
-  gather_facts: yes
+  become_method: sudo
   connection: ssh
   tasks:
      - name: Host > Disable swap
