@@ -36,3 +36,7 @@
       when: inventory_hostname in groups['workers']
       command: "{{ hostvars[groups['masters'][0]].join_command.stdout }} --ignore-preflight-errors=NumCPU,Mem"
     
+    - name: k8s> Label and Assign Role to Workers
+      when: inventory_hostname in groups['workers']
+      command: kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/worker=worker
+      delegate_to: masters
