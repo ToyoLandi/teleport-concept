@@ -77,7 +77,7 @@
               -extensions v3_ext -extfile {{ CERTIFICATE_DIR }}/csr.conf -sha256
 
      - name: Distribute CA Certificate to all Nodes
-       ansible-builtin.copy:
+       ansible.builtin.copy:
          src: "{{CERTIFICATE_DIR }}/ca.crt"
          dest: "/usr/local/share/ca-certificates/kubernetes.crt"
 
