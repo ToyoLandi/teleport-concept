@@ -33,6 +33,6 @@
       register: join_command
 
     - name: k8s> Join Workers to Cluster
-      when: inventory_hostname in groups['masters']
+      when: inventory_hostname in groups['workers']
       command: "{{ hostvars[groups['masters'][0]].join_command.stdout }} --ignore-preflight-errors=NumCPU,Mem"
     
