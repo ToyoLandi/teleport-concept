@@ -25,7 +25,14 @@
 
     - name: k8s> Install Flannel CNI
       when: inventory_hostname in groups['masters']    
-      command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+      command: kubectl apply -f https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/kube-flannel.yaml
+
+    - name: k8s> Install Helm (v4)
+      when: inventory_hostname in groups['masters']    
+      shell: |
+             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
+             chmod 700 get_helm.sh
+             ./get_helm.sh
 
     - name: k8s> Fetch join token from Control-plane
       when: inventory_hostname in groups['masters']
