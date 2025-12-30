@@ -3,7 +3,6 @@ kind: InitConfiguration
 nodeRegistration:
   criSocket: "unix:///var/run/containerd/containerd.sock"  # CRI set to containerd
 localAPIEndpoint:
-  advertiseAddress: "{{ ansible_host }}"  # Host IP for the Kubernetes API // ansible_host == challenger-master
   bindPort: 6443 # Default Bind Port // firewall exceptions made in "stage-k8s"
 
 ---

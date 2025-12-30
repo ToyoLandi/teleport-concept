@@ -4,6 +4,8 @@
   become_user: root
   become_method: su
   connection: ssh
+  environment: 
+    KUBECONFIG: /etc/kubernetes/admin.conf
   vars:
     local_kubeadmin_config: "/home/{{ ansible_user }}/ansible/kubeadm-conf.j2"
   tasks:
@@ -20,10 +22,6 @@
         creates: /etc/kubernetes/admin.conf
       register: kubeadm_init
       changed_when: kubeadm_init.rc == 0
-
-    - name: k8s> Export KUBECONFIG for Root / Enabling kubectl commands
-      when: inventory_hostname in groups['masters']  
-      command: export KUBECONFIG=/etc/kubernetes/admin.conf
 
     - name: k8s> Install Flannel CNI
       when: inventory_hostname in groups['masters']    
