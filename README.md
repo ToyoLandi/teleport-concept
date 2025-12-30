@@ -10,12 +10,11 @@ This guide assumes the following...
 
 There are several sections to this guide, all documented under the "docs" directory to keep the README here more concise. Refer to the Table of Contents below for an ordered list of building this solution from scratch.
 
----
 
 ## Table of Contents
-1. [Design Considerations](link)
-2. [Standing Up our VMs with Rocky Linux 10.1](link)
-3. [Preparing our Virtual Machines for Kubernetes with Ansible](link)
-4. [Using Flux and Helm to deploy our Nginx Website w/ Cert-Manager](link)
-
----
+1. [Design Considerations](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/DesignConsiderations.md)
+2. [Standing Up our VMs with Rocky Linux 10.1](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/installVms.md)
+3. [Getting Started With Ansible](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/installAnsible.md)
+4. [Installing Kubernetes using Ansible + Kubeadm](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/installingk8s.md)
+5. [Configuring Kubernetes RBAC](link)
+6. [Using Flux and Helm to deploy our Nginx Website w/ Cert-Manager](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/installNginx.md)

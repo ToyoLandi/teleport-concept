@@ -128,24 +128,6 @@ def install_ansible(user:str):
             print('autoAnsible: ERROR attempting to create Ansible dir.')
             raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
 
-def install_ansible_x509(user:str):
-    '''
-    This should be ran with our 'ansible' user
-
-    Since we are using ansible-core, we need to install the
-    community.crypto.x509 manually via ansible-galaxy. 
-    '''
-    print("autoAnsible: Attempting to install community.crypto.x509 for Ansible")
-    su_command = ("ansible-galaxy collection install community.crypto")
-    process = subprocess.Popen(['su', user, '-c', su_command], 
-                               text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-    if process.returncode != 0: 
-        print("autoAnsible: ERROR attempting to install community.crypto.x509 for Ansible")
-        raise subprocess.CalledProcessError(process.returncode, 'su', stderr)
-    else:
-        print("autoAnsible: Successfully installed community.crypto.x509 for Ansible")
-
 def pull_ansible_inventory(user:str):
     '''
     This should be ran by our 'ansible' user. 
