@@ -5,7 +5,7 @@
   become_method: su
   connection: ssh
   environment: 
-    KUBECONFIG: /etc/kubernetes/admin.conf
+    KUBECONFIG: "/etc/kubernetes/admin.conf"
   vars:
     local_kubeadmin_config: "/home/{{ ansible_user }}/ansible/kubeadm-conf.j2"
   tasks:
