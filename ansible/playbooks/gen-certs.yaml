@@ -28,7 +28,10 @@
               openssl genrsa -out /etc/demo-ca/ca.key 2048
               openssl req -x509 -new -nodes -key {{ CERTIFICATE_DIR }}/ca.key -subj "/CN={{ CA_CN }}" -days 10000 -out {{ CERTIFICATE_DIR }}/ca.crt
      
-     - name: Generate Kubernetes Server CSR Config
+     - name: Create Kubernetes Server CSR Config file
+       command: touch {{ CERTIFICATE_DIR }}/csr.conf
+
+     - name: Write Kubernetes Server CSR Config
        when: inventory_hostname in groups['masters']
        blockinfile:
          path: "{{ CERTIFICATE_DIR }}/csr.conf"
