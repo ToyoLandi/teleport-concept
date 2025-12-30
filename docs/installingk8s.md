@@ -53,7 +53,7 @@ If something went royally wrong, or you just want to remove the deployment, run 
 ```
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/remove-k8s.yaml -o ~/ansible/remove-k8s.yaml
 
-ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/init-k8s.yaml -K
+ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/remove-k8s.yaml -K
 ```
 
 ## What's Next?
