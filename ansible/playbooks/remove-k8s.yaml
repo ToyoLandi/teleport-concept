@@ -21,6 +21,6 @@
     - name : k8s> Delete Flannel Interfaces
       shell: |
              ip link delete flannel.1
-             ip link delete cni0
+             ip link delete cni.0
 
 
