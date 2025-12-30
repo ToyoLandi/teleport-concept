@@ -15,9 +15,9 @@
                setenforce 0
                sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
-     - name: Host > Install openssl via dnf
+     - name: Host > Install openssl, git, and tar via dnf
        shell: |
-               dnf install -y openssl 
+               dnf install -y openssl git
                              
      - name: Host > Add hostnames from Ansible inventory to /etc/hosts
        lineinfile:
