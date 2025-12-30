@@ -15,6 +15,10 @@
                setenforce 0
                sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
+     - name: Host > Install openssl via dnf
+       shell: |
+               dnf install -y openssl 
+                             
      - name: Host > Add hostnames from Ansible inventory to /etc/hosts
        lineinfile:
          dest: /etc/hosts
@@ -93,7 +97,7 @@
          path: "/etc/yum.repos.d/kubernetes.repo"
          state: "touch"
 
-     - name: k8s > Write repository information to the kubernetes repo file
+     - name: k8s > Write repository information for kubernetes repo (ver 1.35) 
        blockinfile:
          path: "/etc/yum.repos.d/kubernetes.repo"
          block: |
@@ -104,7 +108,7 @@
                 gpgcheck=1
                 gpgkey=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/repodata/repomd.xml.key
                 exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
-                
+
      - name: k8s > Install kubelet, and kubeadm to all nodes
        shell: |
                dnf install -y kubelet kubeadm --disableexcludes=kubernetes
