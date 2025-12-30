@@ -6,7 +6,7 @@
   connection: ssh
   tasks:
     - name: k8s> Uninstall Cluster via kubeadm reset  
-      command: kubeadm reset --cert-dir string /etc/kubernetes/pki --cleanup-tmp-dir --force
+      command: kubeadm reset --cert-dir /etc/kubernetes/pki --cleanup-tmp-dir --force
 
     - name: k8s> Uninstall Flannel CNI
       when: inventory_hostname in groups['masters']    

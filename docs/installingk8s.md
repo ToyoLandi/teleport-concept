@@ -48,5 +48,13 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
+### Removing Kubernetes
+If something went royally wrong, or you just want to remove the deployment, run the following commands from your 'ansible' user shell on the 'master' node. 
+```
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/remove-k8s.yaml -o ~/ansible/remove-k8s.yaml
+
+ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/init-k8s.yaml -K
+```
+
 ## What's Next?
 Congratulations, you are officially a Kubernetes Cluster Admin! Now the real fun begins configuring RBAC rules, standing up our nginx workload using a normal user with limited permissions, and a touch of certificate tomfoolery. Proceed to our "configuringRBAC" doc when your ready. 
