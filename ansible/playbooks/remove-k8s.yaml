@@ -14,7 +14,7 @@
              rm -rf /run/flannel
              rm -rf /etc/cni/net.d/
              ip link delete flannel.1
-             ip link delete cni.0
+             ip link delete cni0
 
 
 
