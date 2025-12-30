@@ -13,4 +13,3 @@ networking:
   podSubnet: "10.244.0.0/16"  # Pod CIDR for Flannel
   serviceSubnet: "10.96.0.0/12" # Default Service Subnet
 kubernetesVersion: "v1.35.0" # Version is also declared in 'stage-k8s' k8s repo task
-controlPlaneEndpoint: "{{ ansible_host }}:6443"  # Control plane endpoint
