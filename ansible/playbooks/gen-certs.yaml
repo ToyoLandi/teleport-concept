@@ -12,7 +12,7 @@
     SERVER_CSR_ST: "NC"
     SERVER_CSR_L: "Apex"
     SERVER_CSR_O: "Teleport-Concept"
-    CSR_OU: "DevOps"
+    SERVER_CSR_OU: "DevOps"
   tasks:
      - name: Install openssl
        command: dnf install -y openssl
