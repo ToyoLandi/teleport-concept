@@ -6,7 +6,7 @@
   connection: ssh
   vars:
     CERTIFICATE_DIR: "/etc/demo-ca"
-    CA_CN: "{{ hostvars[groups['challenger-master'][0]].ansible_host }}"
+    CA_CN: "{{ hostvars[groups['masters'][0]].ansible_host }}"
     CA_CLUSTER_IP: "10.244.1.0"
     SERVER_CSR_C: "USA"
     SERVER_CSR_ST: "NC"
