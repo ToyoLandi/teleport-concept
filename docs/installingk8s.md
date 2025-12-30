@@ -9,14 +9,16 @@ We should now have a 'ansible' non-root user, which can connect to all three nod
 
 ## Setting the Stage for Kubernetes Using Ansible.
 
-1. From your 'ansible' users terminal, `curl` the "install-k8s.yaml" playbook from this repos "ansible" directory, 
+1. From your 'ansible' users terminal, `curl` the "stage-k8s.yaml" and "gen-certs" playbook from this repos "ansible" directory, 
 ```
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/stage-k8s.yaml -o ~/ansible/stage-k8s.yaml 
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/gen-certs.yaml -o ~/ansible/stage-k8s.yaml 
 ```
-> This a great reference to see all the commands we use to config/deploy the k8s requirements, in once place.
+> The 'stage-k8s' playbook is a great reference to see all the commands we use to config/deploy the k8s requirements, in once place.
 
-3. Begin our kubernetes deployment by running the following ansible-playbook command. Thanks to the `-K` [argument](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#using-become) you will be prompted for the `BECOME password`, aka the password of your root account, without needing to expose this in your playbook or command history. 
+3. Begin our kubernetes deployment by running the following ansible-playbook commands. Thanks to the `-K` [argument](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#using-become) you will be prompted for the `BECOME password`, aka the password of your root account, without needing to expose this in your playbook or command history. 
 ```
+ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/gen-certs.yaml -K
 ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/stage-k8s.yaml -K
 ```
 
@@ -52,7 +54,8 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 If something went royally wrong, or you just want to remove the deployment, run the following commands from your 'ansible' user shell on the 'master' node. 
 ```
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/remove-k8s.yaml -o ~/ansible/remove-k8s.yaml
-
+```
+```
 ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/remove-k8s.yaml -K
 ```
 

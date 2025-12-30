@@ -8,14 +8,17 @@
     - name: k8s> Uninstall Cluster via kubeadm reset  
       command: kubeadm reset --cert-dir /etc/kubernetes/pki --cleanup-tmp-dir --force
     
-    - name : k8s> Uninstall Flannel CNI leftovers
+    - name: k8s> Removing cni0 Interface from Control-plane
+      when: inventory_hostname in groups['masters']
+      shell: |
+             ip link delete cni0
+
+    - name: k8s> Uninstall Flannel CNI leftovers
       shell: |
              rm -rf /var/lib/cni/
              rm -rf /run/flannel
              rm -rf /etc/cni/net.d/
              ip link delete flannel.1
-             ip link delete cni0
-
 
 
 

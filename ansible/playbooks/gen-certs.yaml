@@ -1,0 +1,86 @@
+     
+- hosts: masters, workers
+  become: true
+  become_user: root
+  become_method: su
+  connection: ssh
+  vars:
+    CERTIFICATE_DIR: "/etc/demo-ca"
+    CA_CN: "{{ hostvars[groups['challenger-master'][0]].ansible_host }}"
+    CA_CLUSTER_IP: "10.244.1.0"
+    SERVER_CSR_C: "USA"
+    SERVER_CSR_ST: "NC"
+    SERVER_CSR_L: "Apex"
+    SERVER_CSR_O: "Teleport-Concept"
+    CSR_OU: "DevOps"
+  tasks:
+     - name: Install openssl
+       command: dnf install -y openssl
+
+     - name: Create /etc/demo-ca Certificate Directory
+       when: inventory_hostname in groups['masters']
+       shell: | 
+              mkdir {{ CERTIFICATE_DIR }}
+
+     - name: Generate CA Cert and Key
+       when: inventory_hostname in groups['masters']
+       shell: | 
+              openssl genrsa -out /etc/demo-ca/ca.key 2048
+              openssl req -x509 -new -nodes -key {{ CERTIFICATE_DIR }}/ca.key -subj "/CN={{ CA_CN }}" -days 10000 -out {{ CERTIFICATE_DIR }}/ca.crt
+     
+     - name: Generate Kubernetes Server CSR Config
+       when: inventory_hostname in groups['masters']
+       blockinfile:
+         path: "{{ CERTIFICATE_DIR }}/csr.conf"
+         block: |
+                [ req ]
+                default_bits = 2048
+                prompt = no
+                default_md = sha256
+                req_extensions = req_ext
+                distinguished_name = dn
+                
+                [ dn ]
+                C = {{ SERVER_CSR_C }}
+                ST = {{ SERVER_CSR_ST }}
+                L = {{ SERVER_CSR_L }}
+                O = {{ SERVER_CSR_O }}
+                OU = {{ SERVER_CSR_OU }}
+                CN = {{ CA_CN }}
+                
+                [ req_ext ]
+                subjectAltName = @alt_names
+                
+                [ alt_names ]
+                DNS.1 = kubernetes
+                DNS.2 = kubernetes.default
+                DNS.3 = kubernetes.default.svc
+                DNS.4 = kubernetes.default.svc.cluster
+                DNS.5 = kubernetes.default.svc.cluster.local
+                IP.1 = {{ CA_CN }}
+                IP.2 = {{ CA_CLUSTER_IP }}
+                
+                [ v3_ext ]
+                authorityKeyIdentifier=keyid,issuer:always
+                basicConstraints=CA:FALSE
+                keyUsage=keyEncipherment,dataEncipherment
+                extendedKeyUsage=serverAuth,clientAuth
+                subjectAltName=@alt_names
+
+     - name: Generate Server Cert and Key
+       when: inventory_hostname in groups['masters']
+       shell: | 
+              openssl genrsa -out {{CERTIFICATE_DIR }}/server.key 2048
+              openssl req -new -key {{CERTIFICATE_DIR }}/server.key -out {{ CERTIFICATE_DIR }}/server.csr -config {{ CERTIFICATE_DIR }}/csr.conf
+              openssl x509 -req -in {{ CERTIFICATE_DIR }}/server.csr -CA {{ CERTIFICATE_DIR }}/ca.crt -CAkey {{ CERTIFICATE_DIR }}/ca.key \
+              -CAcreateserial -out {{ CERTIFICATE_DIR }}/server.crt -days 10000 \
+              -extensions v3_ext -extfile {{ CERTIFICATE_DIR }}/csr.conf -sha256
+
+     - name: Distribute CA Certificate to all Nodes
+       ansible-builtin.copy:
+         src: "{{CERTIFICATE_DIR }}/ca.crt"
+         dest: "/usr/local/share/ca-certificates/kubernetes.crt"
+
+     - name: Update CA Certificate Store
+       command: update-ca-certificates
+              
