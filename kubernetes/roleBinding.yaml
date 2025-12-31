@@ -1,0 +1,13 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: spezzys-binding
+  namespace: webservers
+subjects:
+- kind: User
+  name: spezzy
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: spezzys-rwx-role
+  apiGroup: rbac.authorization.k8s.io

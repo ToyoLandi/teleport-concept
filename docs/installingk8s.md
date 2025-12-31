@@ -12,13 +12,11 @@ We should now have a 'ansible' non-root user, which can connect to all three nod
 1. From your 'ansible' users terminal, `curl` the "stage-k8s.yaml" and "gen-certs" playbook from this repos "ansible" directory, 
 ```
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/stage-k8s.yaml -o ~/ansible/stage-k8s.yaml 
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/gen-certs.yaml -o ~/ansible/gen-certs.yaml 
 ```
 > The 'stage-k8s' playbook is a great reference to see all the commands we use to config/deploy the k8s requirements, in once place.
 
 3. Begin our kubernetes deployment by running the following ansible-playbook commands. Thanks to the `-K` [argument](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#using-become) you will be prompted for the `BECOME password`, aka the password of your root account, without needing to expose this in your playbook or command history. 
 ```
-ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/gen-certs.yaml -K
 ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/stage-k8s.yaml -K
 ```
 
@@ -43,21 +41,15 @@ curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/mai
 ```
 ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/init-k8s.yaml -K
 ```
-3. As a final-step, run the below commands on any user you wish to run unrestricted kubectl commands with shell access to our Master node (challenger-master)
+
+## Running `kubectl` Commands with Admin Permissions
+1. Run the below commands on any user you wish to run unrestricted kubectl commands with shell access to our Master node (challenger-master)
 ```
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
-
-### Removing Kubernetes
-If something went royally wrong, or you just want to remove the deployment, run the following commands from your 'ansible' user shell on the 'master' node. 
-```
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/remove-k8s.yaml -o ~/ansible/remove-k8s.yaml
-```
-```
-ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/remove-k8s.yaml -K
-```
+> In this guide, only the "challenger-master" node has `kubectl` installed, but this isnt the only possible way. You could even install `kubectl` on your local machine as long as you have the ability to reach the API server URL and a config file present, you can run kubernetes commands. 
 
 ## What's Next?
 Congratulations, you are officially a Kubernetes Cluster Admin! Now the real fun begins configuring RBAC rules, standing up our nginx workload using a normal user with limited permissions, and a touch of certificate tomfoolery. Proceed to our "configuringRBAC" doc when your ready. 
