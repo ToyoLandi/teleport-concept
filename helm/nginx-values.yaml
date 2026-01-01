@@ -1,0 +1,33 @@
+## Custom NGINX Website Values.yaml 
+## Bitnami NGINX image version
+image:
+  registry: docker.io
+  repository: bitnami/nginx
+  tag: 1.29.1-debian-12-r0
+  pullPolicy: IfNotPresent
+
+enableDefaultInitContainers: true
+replicaCount: 1
+revisionHistoryLimit: 10
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate: {}
+
+## NGINX Service properties
+service:
+  type: HostPort
+  ports:
+    http: 80
+    https: 443
+  nodePorts:
+    http: ""
+    https: ""
+  targetPort:
+    http: http
+    https: https
+  clusterIP: ""
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  loadBalancerClass: ""
+  extraPorts: []
+  externalTrafficPolicy: Cluster
