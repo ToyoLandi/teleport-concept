@@ -32,6 +32,7 @@
      - name: firewalld > stage firewall exceptions for k8s control-plane
        when: inventory_hostname in groups['masters']
        shell: |
+               firewall-cmd --zone=public --add-port=8472/udp
                firewall-cmd --zone=public --add-port=6443/tcp
                firewall-cmd --zone=public --add-port=2379-2380/tcp
                firewall-cmd --zone=public --add-port=10250/tcp
@@ -41,6 +42,7 @@
      - name: firewalld > Stage firewall exceptions for k8s workers
        when: inventory_hostname in groups['workers']
        shell: |
+               firewall-cmd --zone=public --add-port=8472/udp
                firewall-cmd --zone=public --add-port=10250/tcp
                firewall-cmd --zone=public --add-port=10256/tcp
                firewall-cmd --zone=public --add-port=30000-32767/tcp
