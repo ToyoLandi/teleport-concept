@@ -9,8 +9,9 @@ We should now have a 'ansible' non-root user, which can connect to all three nod
 
 ## Setting the Stage for Kubernetes Using Ansible.
 
-1. From your 'ansible' users terminal, `curl` the "stage-k8s.yaml" and "gen-certs" playbook from this repos "ansible" directory, 
+1. From your 'ansible' users terminal, `curl` the "stage-k8s.yaml" playbook and "hosts.yaml" inventory from this repos "ansible" directory, 
 ```
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/hosts.yaml -o ~/ansible/hosts.yaml 
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/stage-k8s.yaml -o ~/ansible/stage-k8s.yaml 
 ```
 > The 'stage-k8s' playbook is a great reference to see all the commands we use to config/deploy the k8s requirements, in once place.

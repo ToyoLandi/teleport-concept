@@ -1,49 +1,43 @@
 ---
-- hosts: masters, workers 
-  become: true
-  become_user: root
-  become_method: su
-  connection: ssh
-  environment: 
-    KUBECONFIG: "/etc/kubernetes/admin.conf"
-  vars:
-    local_kubeadmin_config: "/home/{{ ansible_user }}/ansible/kubeadm-conf.j2"
-  tasks:
-    - name: k8s> Check that kubelet is enabled/started.
-      systemd:
-        name: kubelet
-        enabled: yes
-        state: started
-
-    - name: k8s> Initialize Kubernetes Cluster
-      when: inventory_hostname in groups['masters']    
-      command: kubeadm init --config {{ local_kubeadmin_config }} --ignore-preflight-errors=NumCPU,Mem
-      args:
-        creates: /etc/kubernetes/admin.conf
-      register: kubeadm_init
-      changed_when: kubeadm_init.rc == 0
-
-    - name: k8s> Install Flannel CNI
-      when: inventory_hostname in groups['masters']    
-      command: kubectl apply -f https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/kube-flannel.yaml
-
-    - name: k8s> Install Helm (v4)
-      when: inventory_hostname in groups['masters']    
-      shell: |
-             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
-             chmod 700 get_helm.sh
-             ./get_helm.sh
-
-    - name: k8s> Fetch join token from Control-plane
-      when: inventory_hostname in groups['masters']
-      command: kubeadm token create --print-join-command
-      register: join_command
-
-    - name: k8s> Join Workers to Cluster
-      when: inventory_hostname in groups['workers']
-      command: "{{ hostvars[groups['masters'][0]].join_command.stdout }} --ignore-preflight-errors=NumCPU,Mem"
-    
-    - name: k8s> Label and Assign Role to Workers
-      when: inventory_hostname in groups['workers']
-      command: kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/worker=worker
-      delegate_to: challenger-master
+become: true
+become_user: root
+become_method: su
+connection: ssh
+environment: 
+  KUBECONFIG: "/etc/kubernetes/admin.conf"
+vars:
+  local_kubeadmin_config: "/home/{{ ansible_user }}/ansible/kubeadm-conf.j2"
+tasks:
+  - name: k8s> Check that kubelet is enabled/started.
+    systemd:
+      name: kubelet
+      enabled: yes
+      state: started
+  - name: k8s> Initialize Kubernetes Cluster
+    hosts: masters    
+    command: kubeadm init --config {{ local_kubeadmin_config }} --ignore-preflight-errors=NumCPU,Mem
+    args:
+      creates: /etc/kubernetes/admin.conf
+    register: kubeadm_init
+    changed_when: kubeadm_init.rc == 0
+  - name: k8s> Install Flannel CNI
+    hosts: masters    
+    command: kubectl apply -f https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/kube-flannel.yaml
+  - name: k8s> Install Helm (v4)
+    hosts: masters    
+    shell: |
+           curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
+           chmod 700 get_helm.sh
+           ./get_helm.sh
+  - name: k8s> Fetch join token from Control-plane
+    hosts: masters
+    command: kubeadm token create --print-join-command
+    register: join_command
+  - name: k8s> Join Workers to Cluster
+    hosts: workers
+    command: "{{ hostvars[groups['masters'][0]].join_command.stdout }} --ignore-preflight-errors=NumCPU,Mem"
+  
+  - name: k8s> Label and Assign Role to Workers
+    hosts: workers
+    command: kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/worker=worker
+    delegate_to: challenger-master
