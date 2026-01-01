@@ -1,130 +1,137 @@
 ---
-become: true
-become_user: root
-become_method: su
-connection: ssh
-tasks:
-   - name: Host > Disable swap
-     hosts: all
-     shell: |
-             swapoff -a
-             sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-   - name: Host > Disable SELinux
-     hosts: all
-     shell: |
-             setenforce 0
-             sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
-   - name: Host > Install Package Dependencies 
-     hosts: all
-     shell: |      
-             dnf install -y openssl git       
-                           
-   - name: Host > Add hostnames from Ansible inventory to /etc/hosts
-     hosts: all
-     lineinfile:
-       dest: /etc/hosts
-       regexp: '.*{{ item }}$'
-       line: "{{ hostvars[item].ansible_host }} {{item}}"
-       state: present
-     when: hostvars[item].ansible_host is defined
-     with_items: "{{ groups.all }}"
-   - name: firewalld > stage firewall exceptions for k8s control-plane
-     hosts: masters
-     shell: |
-             firewall-cmd --zone=public --add-port=6443/tcp
-             firewall-cmd --zone=public --add-port=2379-2380/tcp
-             firewall-cmd --zone=public --add-port=10250/tcp
-             firewall-cmd --zone=public --add-port=10259/tcp
-             firewall-cmd --zone=public --add-port=10257/tcp   
-   - name: firewalld > Stage firewall exceptions for k8s workers
-     hosts: workers
-     shell: |
-             firewall-cmd --zone=public --add-port=10250/tcp
-             firewall-cmd --zone=public --add-port=10256/tcp
-             firewall-cmd --zone=public --add-port=30000-32767/tcp
-             firewall-cmd --zone=public --add-port=30000-32767/udp
-   - name: firewalld > Commit and apply firewall exceptions
-     hosts: all     
-     shell: |
-             firewall-cmd --runtime-to-permanent
-             firewall-cmd --reload     
-   - name: containerd > Create .conf file for modules-load.d
-     hosts: all
-     file:
-       path: "/etc/modules-load.d/containerd.conf"
-       state: "touch"
-   - name: containerd > Write config to modules-load.d .conf file
-     hosts: all
-     blockinfile:
-       path: "/etc/modules-load.d/containerd.conf"
-       block: |
-             overlay
-             br_netfilter
-   - name: containerd > Add kernel modules via modprobe
-     hosts: all
-     shell: |
-             modprobe overlay
-             modprobe br_netfilter
-   - name: containerd > Create k8s-cri networking conf file
-     hosts: all
-     file:
-       path: "/etc/sysctl.d/99-kubernetes-cri.conf"
-       state: "touch"
-   - name: containerd > Write k8s-cri networking conf file
-     hosts: all
-     blockinfile:
-       path: "/etc/sysctl.d/99-kubernetes-cri.conf"
-       block: |
-              net.bridge.bridge-nf-call-iptables = 1
-              net.ipv4.ip_forward = 1
-              net.bridge.bridge-nf-call-ip6tables = 1
-   - name: containerd > Apply networking configurations via sysctl
-     hosts: all
-     command: sysctl --system
-   - name: containerd > Install and configure containerd (w/ systemd)
-     hosts: all
-     shell: |
-             dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-             dnf makecache
-             dnf install -y containerd.io
-             mkdir -p /etc/containerd
-             curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/containerd/config.toml -o /etc/containerd/config.toml
-             systemctl restart containerd
-   - name: kube-vip > Generate Manifest 
-     hosts: masters
-     shell: |
-            mkdir /etc/kubernetes
-            mkdir /etc/kubernetes/manifest
-            alias kube-vip="ctr image pull ghcr.io/kube-vip/kube-vip:{{ kube_vip_version }}; ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:{{ kube_vip_version }} vip /kube-vip"
-            kube-vip manifest pod \
-            --interface {{ kube_vip_interface }} \
-            --address {{ kube_vip_ip }} \
-            --services \
-            --arp \
-            --leaderElection | tee /etc/kubernetes/manifests/kube-vip.yaml
-   - name: k8s > Create kubernetes repo file
-     hosts: all
-     file:
-       path: "/etc/yum.repos.d/kubernetes.repo"
-       state: "touch"
-   - name: k8s > Write information for kubernetes repo (ver 1.35)
-     hosts: all
-     blockinfile:
-       path: "/etc/yum.repos.d/kubernetes.repo"
-       block: |
-              [kubernetes]
-              name=Kubernetes
-              baseurl=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/
-              enabled=1
-              gpgcheck=1
-              gpgkey=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/repodata/repomd.xml.key
-              exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
-   - name: k8s > Install kubelet, and kubeadm to all nodes
-     hosts: all
-     shell: |
-             dnf install -y kubelet kubeadm --disableexcludes=kubernetes
-             systemctl enable --now kubelet
-   - name: k8s > Install kubectl to control-plane
-     hosts: masters
-     shell: |
-             dnf install -y kubectl --disableexcludes=kubernetes
+- hosts: masters, workers
+  become: true
+  become_user: root
+  become_method: su
+  connection: ssh
+  vars: 
+    easyrsa_path: "/easy-rsa-master/easyrsa3/"
+  tasks:
+     - name: Host > Disable swap
+       shell: |
+               swapoff -a
+               sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+     - name: Host > Disable SELinux
+       shell: |
+               setenforce 0
+               sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+     - name: Host > Install Certificate Dependencies 
+       shell: |
+               dnf install -y epel-release       
+               dnf install -y openssl git easy-rsa          
+                             
+     - name: Host > Add hostnames from Ansible inventory to /etc/hosts
+       lineinfile:
+         dest: /etc/hosts
+         regexp: '.*{{ item }}$'
+         line: "{{ hostvars[item].ansible_host }} {{item}}"
+         state: present
+       when: hostvars[item].ansible_host is defined
+       with_items: "{{ groups.all }}"
+
+     - name: firewalld > stage firewall exceptions for k8s control-plane
+       when: inventory_hostname in groups['masters']
+       shell: |
+               firewall-cmd --zone=public --add-port=6443/tcp
+               firewall-cmd --zone=public --add-port=2379-2380/tcp
+               firewall-cmd --zone=public --add-port=10250/tcp
+               firewall-cmd --zone=public --add-port=10259/tcp
+               firewall-cmd --zone=public --add-port=10257/tcp   
+
+     - name: firewalld > Stage firewall exceptions for k8s workers
+       when: inventory_hostname in groups['workers']
+       shell: |
+               firewall-cmd --zone=public --add-port=10250/tcp
+               firewall-cmd --zone=public --add-port=10256/tcp
+               firewall-cmd --zone=public --add-port=30000-32767/tcp
+               firewall-cmd --zone=public --add-port=30000-32767/udp
+
+     - name: firewalld > Commit and apply firewall exceptions
+       shell: |
+               firewall-cmd --runtime-to-permanent
+               firewall-cmd --reload     
+
+     - name: containerd > Create .conf file for modules-load.d
+       file:
+         path: "/etc/modules-load.d/containerd.conf"
+         state: "touch"
+
+     - name: containerd > Write config to modules-load.d .conf file
+       blockinfile:
+         path: "/etc/modules-load.d/containerd.conf"
+         block: |
+               overlay
+               br_netfilter
+
+     - name: containerd > Add kernel modules via modprobe
+       shell: |
+               modprobe overlay
+               modprobe br_netfilter
+
+     - name: containerd > Create k8s-cri networking conf file
+       file:
+         path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+         state: "touch"
+
+     - name: containerd > Write k8s-cri networking conf file
+       blockinfile:
+         path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+         block: |
+                net.bridge.bridge-nf-call-iptables = 1
+                net.ipv4.ip_forward = 1
+                net.bridge.bridge-nf-call-ip6tables = 1
+
+     - name: containerd > Apply networking configurations via sysctl
+       command: sysctl --system
+
+     - name: containerd > Install and configure containerd (w/ systemd)
+       shell: |
+               dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+               dnf makecache
+               dnf install -y containerd.io
+               mkdir -p /etc/containerd
+               curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/containerd/config.toml -o /etc/containerd/config.toml
+               systemctl restart containerd
+
+
+     - name: kube-vip > Generate Manifest 
+       when: inventory_hostname in groups['masters']
+       shell: |
+              mkdir /etc/kubernetes
+              mkdir /etc/kubernetes/manifest
+              alias kube-vip="ctr image pull ghcr.io/kube-vip/kube-vip:{{ kube_vip_version }}; ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:{{ kube_vip_version }} vip /kube-vip"
+              kube-vip manifest pod \
+              --interface {{ kube_vip_interface }} \
+              --address {{ kube_vip_ip }} \
+              --services \
+              --arp \
+              --leaderElection | tee /etc/kubernetes/manifests/kube-vip.yaml
+
+     - name: k8s > Create kubernetes repo file
+       file:
+         path: "/etc/yum.repos.d/kubernetes.repo"
+         state: "touch"
+
+     - name: k8s > Write information for kubernetes repo (ver 1.35) 
+       blockinfile:
+         path: "/etc/yum.repos.d/kubernetes.repo"
+         block: |
+                [kubernetes]
+                name=Kubernetes
+                baseurl=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/
+                enabled=1
+                gpgcheck=1
+                gpgkey=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/repodata/repomd.xml.key
+                exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+
+     - name: k8s > Install kubelet, and kubeadm to all nodes
+       shell: |
+               dnf install -y kubelet kubeadm --disableexcludes=kubernetes
+               systemctl enable --now kubelet
+
+     - name: k8s > Install kubectl to control-plane
+       when: inventory_hostname in groups['masters']
+       shell: |
+               dnf install -y kubectl --disableexcludes=kubernetes
