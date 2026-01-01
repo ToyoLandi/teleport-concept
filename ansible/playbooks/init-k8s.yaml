@@ -4,8 +4,6 @@
   become_user: root
   become_method: su
   connection: ssh
-  environment: 
-    KUBECONFIG: "/etc/kubernetes/admin.conf"
   vars:
     local_kubeadmin_config: "/home/{{ ansible_user }}/ansible/kubeadm-conf.j2"
   tasks:
@@ -52,7 +50,6 @@
       when: inventory_hostname in groups['masters']
       shell: |
              kubectl apply -f https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/main/manifest/kube-vip-cloud-controller.yaml
-
              kubectl create configmap -n kube-system kubevip --from-literal range-global={{ kube_vip_range }}
       environment : 
         KUBECONFIG: /etc/kubernetes/admin.conf

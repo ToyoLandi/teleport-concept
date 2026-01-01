@@ -4,7 +4,8 @@ We should now have a 'ansible' non-root user, which can connect to all three nod
 
 - Disable Swap and SELinux as requested by the [kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/) docs.
 - Install containerd, runc, + configure the containerd to use systemd as its cgroup driver.
-- Configure kernel host, and firewall networking configurations to prepare for k8s.
+- Configure kernel, host, and firewall networking configurations to prepare for k8s.
+- Deploy kube-vip in --service mode for on-prem loadbalancing via ARP.
 - Importantly, Install kubeadm, kubelet, and kubectl.
 
 ## Setting the Stage for Kubernetes Using Ansible.
@@ -16,7 +17,9 @@ curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/mai
 ```
 > The 'stage-k8s' playbook is a great reference to see all the commands we use to config/deploy the k8s requirements, in once place.
 
-3. Begin our kubernetes deployment by running the following ansible-playbook commands. Thanks to the `-K` [argument](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#using-become) you will be prompted for the `BECOME password`, aka the password of your root account, without needing to expose this in your playbook or command history. 
+2. VERY IMPORTANT... Modify the "host.yaml" Host IP address and kube-vip address to match your environment. The `kube_vip_range` will be used as the "EXTERNAL IP" of your exposed Kubernetes Services such as the NGINX Site later in this guide. This range must be available on your local network and ideally preserved from your available DHCP pool.
+
+3. Stage our Kubernetes deployment by running the following ansible-playbook command. Thanks to the `-K` [argument](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#using-become) you will be prompted for the `BECOME password`, aka the password of your root account, without needing to expose this in your playbook or command history. 
 ```
 ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/stage-k8s.yaml -K
 ```
@@ -39,6 +42,15 @@ curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/mai
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/kubeadm-conf.j2 -o ~/ansible/kubeadm-conf.j2
 ```
 2. Run our 'init-k8s' playbook to initialize our Cluster, and join our workers. 
+```
+ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/init-k8s.yaml -K
+```
+
+## Removing the Kubernetes Deployment
+If something went awry during the install, or you wish to tweak the configuration files and redeploy Kubernetes, run the following commands.
+```
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/init-k8s.yaml -o ~/ansible/remove-k8s.yaml
+```
 ```
 ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/init-k8s.yaml -K
 ```
