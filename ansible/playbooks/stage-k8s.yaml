@@ -4,8 +4,6 @@
   become_user: root
   become_method: su
   connection: ssh
-  vars: 
-    easyrsa_path: "/easy-rsa-master/easyrsa3/"
   tasks:
      - name: Host > Disable swap
        shell: |
@@ -95,12 +93,11 @@
                curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/containerd/config.toml -o /etc/containerd/config.toml
                systemctl restart containerd
 
-
      - name: kube-vip > Generate Manifest 
        when: inventory_hostname in groups['masters']
        shell: |
               mkdir /etc/kubernetes
-              mkdir /etc/kubernetes/manifest
+              mkdir /etc/kubernetes/manifests
               alias kube-vip="ctr image pull ghcr.io/kube-vip/kube-vip:{{ kube_vip_version }}; ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:{{ kube_vip_version }} vip /kube-vip"
               kube-vip manifest pod \
               --interface {{ kube_vip_interface }} \

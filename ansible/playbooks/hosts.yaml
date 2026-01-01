@@ -6,9 +6,10 @@ masters:
       ansible_user: ansible
       ansible_ssh_private_key_file: ~/.ssh/challenger-master_rsa
   vars: 
-    kube_vip_ip: 10.99.0.21
+    kube_vip_ip: 10.99.0.20
+    kube_vip_range: 10.99.0.21-10.99.0.25
     kube_vip_interface: ens33
-    kube_vip_version: v1.0.4
+    kube_vip_version: v1.0.3
 
 workers:
   hosts: 

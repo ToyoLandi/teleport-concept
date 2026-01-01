@@ -47,3 +47,12 @@
       when: inventory_hostname in groups['workers']
       command: kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/worker=worker
       delegate_to: challenger-master
+    
+    - name: kube-vip> Deploy kube-vip-cloud-controller 
+      when: inventory_hostname in groups['masters']
+      shell: |
+             kubectl apply -f https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/main/manifest/kube-vip-cloud-controller.yaml
+
+             kubectl create configmap -n kube-system kubevip --from-literal range-global={{ kube_vip_range }}
+      environment : 
+        KUBECONFIG: /etc/kubernetes/admin.conf

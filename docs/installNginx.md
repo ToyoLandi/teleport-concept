@@ -1,10 +1,5 @@
 # TODO
 
-- Deploy `kube-vip` as our Load-balancer to fetch an IP from the LOCAL network 10.99.0.13 for example -> as admin
--- OPTIONAL? deploy traefik to handle the webrequest?
-- Deploy Cert-manager as admin -> 
-    > This may require standing up a local CA -- see misc in "CODE" for ansible steps to do this...
-- Deploy Nginx with tls args pointing to the Cert-manager cert secret
 
 ## Deploying Traefik as our Reverse Proxy
 
@@ -35,13 +30,11 @@ helm install \
   --set crds.enabled=true
 ```
 
-#### Creating our CA
-
-
-
-
-
 ## Installing NGINX
+
+
 ```
-helm install nginx oci://registry-1.docker.io/bitnamicharts/nginx
+helm registry login registry-1.docker.io -u <your hub.docker.com username>
+curl <values.yaml>
+helm install nginx-demo bitnami/nginx -f nginx-values.yaml
 ```
