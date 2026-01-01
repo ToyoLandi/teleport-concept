@@ -12,9 +12,8 @@ We should now have a 'ansible' non-root user, which can connect to all three nod
 
 1. From your 'ansible' users terminal, `curl` the "stage-k8s.yaml" playbook and "hosts.yaml" inventory from this repos "ansible" directory, 
 ```
-export DEMO-REPO=https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main
-curl DEMO-REPO/ansible/playbooks/hosts.yaml -o ~/ansible/hosts.yaml 
-curl DEMO-REPO/main/ansible/playbooks/stage-k8s.yaml -o ~/ansible/stage-k8s.yaml 
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/hosts.yaml -o ~/ansible/hosts.yaml 
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/main/ansible/playbooks/stage-k8s.yaml -o ~/ansible/stage-k8s.yaml 
 ```
 > The 'stage-k8s' playbook is a great reference to see all the commands we use to config/deploy the k8s requirements, in once place.
 
@@ -40,8 +39,8 @@ By the end of this section, we will...
 
 1.  From the 'ansible' user shell, `curl` the kubeadm-conf.j2 kubeadm config template and init-k8s.yaml playbook to our '~/ansible' dir. 
 ```
-curl DEMO-REPO/ansible/playbooks/init-k8s.yaml -o ~/ansible/init-k8s.yaml
-curl DEMO-REPO/main/kubernetes/kubeadm-conf.j2 -o ~/ansible/kubeadm-conf.j2
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/init-k8s.yaml -o ~/ansible/init-k8s.yaml
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/main/kubernetes/kubeadm-conf.j2 -o ~/ansible/kubeadm-conf.j2
 ```
 2. Run our 'init-k8s' playbook to initialize our Cluster, and join our workers. 
 ```
@@ -51,7 +50,7 @@ ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/init-k8s.yaml -K
 ## Removing the Kubernetes Deployment
 If something went awry during the install, or you wish to tweak the configuration files and redeploy Kubernetes, run the following commands.
 ```
-curl DEMO-REPO/ansible/playbooks/remove-k8s.yaml -o ~/ansible/remove-k8s.yaml
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/remove-k8s.yaml -o ~/ansible/remove-k8s.yaml
 ```
 ```
 ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/remove-k8s.yaml -K
