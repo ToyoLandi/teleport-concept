@@ -8,16 +8,17 @@ We should now have a 'ansible' non-root user, which can connect to all three nod
 - Deploy kube-vip in --service mode for on-prem loadbalancing via ARP.
 - Importantly, Install kubeadm, kubelet, and kubectl.
 
-## Setting the Stage for Kubernetes Using Ansible.
+## Part 1 : Setting the Stage for Kubernetes Using Ansible.
 
 1. From your 'ansible' users terminal, `curl` the "stage-k8s.yaml" playbook and "hosts.yaml" inventory from this repos "ansible" directory, 
 ```
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/hosts.yaml -o ~/ansible/hosts.yaml 
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/stage-k8s.yaml -o ~/ansible/stage-k8s.yaml 
+export DEMO-REPO=https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main
+curl DEMO-REPO/ansible/playbooks/hosts.yaml -o ~/ansible/hosts.yaml 
+curl DEMO-REPO/main/ansible/playbooks/stage-k8s.yaml -o ~/ansible/stage-k8s.yaml 
 ```
 > The 'stage-k8s' playbook is a great reference to see all the commands we use to config/deploy the k8s requirements, in once place.
 
-2. VERY IMPORTANT... Modify the "host.yaml" Host IP address and kube-vip address to match your environment. The `kube_vip_range` will be used as the "EXTERNAL IP" of your exposed Kubernetes Services such as the NGINX Site later in this guide. This range must be available on your local network and ideally preserved from your available DHCP pool.
+2. **VERY IMPORTANT...** Modify the "host.yaml" Host IP address and kube-vip address to match your environment. The `kube_vip_range` will be used as the "EXTERNAL IP" of your exposed Kubernetes Services such as the NGINX Site later in this guide. This range must be available on your local network and ideally preserved from your available DHCP pool.
 
 3. Stage our Kubernetes deployment by running the following ansible-playbook command. Thanks to the `-K` [argument](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#using-become) you will be prompted for the `BECOME password`, aka the password of your root account, without needing to expose this in your playbook or command history. 
 ```
@@ -26,7 +27,7 @@ ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/stage-k8s.yaml -K
 
 Once complete, all three nodes are ready for actual Kubernetes deployment in the next section! 
 
-## Initalizing Our Control-plane and Joining our Worker Nodes
+## Part 2 : Initalizing Our Control-plane and Joining our Worker Nodes
 
 Here we take the first steps in building our Kubernetes Stack using `kubeadm` and `kubectl` commands using our 'init-k8s' playbook. 
 
@@ -34,12 +35,13 @@ By the end of this section, we will...
 - Have a working Kubernetes Control-Plane running on our "challenger-master" node.
 - Have Flannel (our Pod network add-on of choice for this demo) configured and running
 - Our worker-nodes (challenger-worker-1, challenger-worker-2) joined to the cluster
+- Our kube-vip-cloud-controller pod deployed and configured with the range provided in `hosts.yaml`
 - The ability to run `kubectl` commands on your own to start playing with kubeapi.
 
 1.  From the 'ansible' user shell, `curl` the kubeadm-conf.j2 kubeadm config template and init-k8s.yaml playbook to our '~/ansible' dir. 
 ```
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/init-k8s.yaml -o ~/ansible/init-k8s.yaml
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/kubeadm-conf.j2 -o ~/ansible/kubeadm-conf.j2
+curl DEMO-REPO/ansible/playbooks/init-k8s.yaml -o ~/ansible/init-k8s.yaml
+curl DEMO-REPO/main/kubernetes/kubeadm-conf.j2 -o ~/ansible/kubeadm-conf.j2
 ```
 2. Run our 'init-k8s' playbook to initialize our Cluster, and join our workers. 
 ```
@@ -49,10 +51,10 @@ ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/init-k8s.yaml -K
 ## Removing the Kubernetes Deployment
 If something went awry during the install, or you wish to tweak the configuration files and redeploy Kubernetes, run the following commands.
 ```
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/init-k8s.yaml -o ~/ansible/remove-k8s.yaml
+curl DEMO-REPO/ansible/playbooks/remove-k8s.yaml -o ~/ansible/remove-k8s.yaml
 ```
 ```
-ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/init-k8s.yaml -K
+ansible-playbook -i ~/ansible/hosts.yaml ~/ansible/remove-k8s.yaml -K
 ```
 
 ## Running `kubectl` Commands with Admin Permissions
