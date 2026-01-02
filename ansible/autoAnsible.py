@@ -140,7 +140,7 @@ def pull_ansible_inventory(user:str):
     MAKE SURE YOU MODIFY THIS FILE WITH YOUR HOSTNAMES AND IPs! 
     '''
     print("autoAnsible: Fetching sample Ansible '.../ansible/hosts.yaml'")
-    hosts_repourl = 'https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/hosts.yaml'
+    hosts_repourl = 'https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/hosts.yaml'
     su_command = (f"curl {hosts_repourl} -o $HOME/ansible/hosts.yaml -s -m 8")
     process = subprocess.Popen(['su', user, '-c', su_command], 
                                text=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
