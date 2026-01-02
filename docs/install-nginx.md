@@ -40,11 +40,11 @@ curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/mai
 kubectl create -f webservers-ca-issuer.yaml
 ```
 
-4. Pull and `create` our webservers-ca issuer cert, which will get signed by our issuer above.
+4. Pull and `create` our webservers-server cert, which will get signed by our issuer above.
 ```
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/cert-manager/webservers-server-client-cert.yaml -o webservers-server-client-cert.yaml
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/cert-manager/webservers-server-cert.yaml -o webservers-server-cert.yaml
 
-kubectl create -f webservers-server-client-cert.yaml
+kubectl create -f webservers-server-cert.yaml
 ```
 
 Finally, check that our certificates are ready using the following...
@@ -52,11 +52,11 @@ Finally, check that our certificates are ready using the following...
 kubectl get certificates -n webservers
 ```
 
-We will use "webservers-server-tls" for our NGINX deployment in the next section.
+We will use **"webservers-server-tls"** for our NGINX deployment in the next section.
 
 
 ## Installing NGINX
-1. Login to `docker.io` so we can pull the "bitnami/nginx" image from docker hub.
+1. With our "spezzy" user, Login to `docker.io` so we can pull the "bitnami/nginx" image from docker hub.
 ```
 helm registry login registry-1.docker.io -u <your hub.docker.com username>
 ```
@@ -78,6 +78,13 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/helm/nginx-values.yaml -o nginx-values.yaml
 
 helm install nginx-demo bitnami/nginx -f nginx-values.yaml -n webservers
+```
+
+### Checking Your Site
+Run the following command to find our `EXTERNAL IP`, then navigate to this site with a browser (if your local machine shares can reach that subnet) -OR- simply `curl` the site using `https://`
+
+```
+kubectl get svc -n webservers
 ```
 
 ## What's Next?
