@@ -70,5 +70,5 @@ helm registry login registry-1.docker.io -u <your hub.docker.com username>
 ```
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/helm/nginx-values.yaml -o nginx-values.yaml
 
-helm install nginx-demo bitnami/nginx -f nginx-values.yaml
+helm install nginx-demo bitnami/nginx -f nginx-values.yaml -n webservers
 ```

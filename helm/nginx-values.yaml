@@ -142,7 +142,7 @@ sidecars: []
 sidecarSingleProcessNamespace: false
 initContainers: []
 pdb:
-  create: true
+  create: false
   minAvailable: ""
   maxUnavailable: ""
 
