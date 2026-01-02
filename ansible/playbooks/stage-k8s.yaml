@@ -18,7 +18,7 @@
      - name: Host > Install Certificate Dependencies 
        shell: |
                dnf install -y epel-release       
-               dnf install -y openssl git easy-rsa          
+               dnf install -y openssl git tar          
                              
      - name: Host > Add hostnames from Ansible inventory to /etc/hosts
        lineinfile:
