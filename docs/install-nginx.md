@@ -10,10 +10,12 @@ Using your user admin account > Run the follow commands to add the 'cert-manager
 helm repo add jetstack https://charts.jetstack.io --force-update
 helm install \
   cert-manager jetstack/cert-manager \
-  --namespace webservers \
+  --namespace cert-manager \
+  --create-namespace
   --version v1.19.2 \
   --set crds.enabled=true
 ```
+> We use the admin user for this step so we can deploy CRDs. We dont trust speezy. We do not want our normal user to manage CRD's as these are cluster wide changes + we want `cert-manager` to be in its own explict namespace.
 
 ### Set-up our Self-Signed Issuer(s) and Certificates 
 Now using your 'webservers' User account (spezzy in this demo), run the following commands. 
@@ -66,11 +68,11 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 
 3. Run the following to pull the `nginx-values.yaml`, and install `nginx` using `helm` and our defined values.yaml. This 'nginx-values.yaml' is configured too...
 
-- Enable TLS using the "webservers-server-tls" secret
-- Deploy two replica-sets (one per node)
-- Using port 80 for HTTP & 443 for HTTPS listening on our kube-vip LoadBalancer for external connections
+- Enable TLS using the "webservers-server-tls" secret.
+- Deploy two replica-sets (one per node).
+- Using port 80 for HTTP & 443 for HTTPS listening on our kube-vip LoadBalancer for external connections.
 - Configured to check an upstream Git repo to update the Static Site
-- We are using "latest" for simplicity in our deployment, though it is best practice to configure an explicit version tag for each image
+- We are using "latest" for simplicity in our deployment, though it is best practice to configure an explicit version tag for each image.
 
 ```
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/helm/nginx-values.yaml -o nginx-values.yaml
@@ -83,7 +85,7 @@ An ambitious one you are. I have nothing more for you in this guide. However thi
 
 
 ## Table of Contents
-1. [Standing Up our VMs with Rocky Linux 10.1](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-vms.md)
+1. [Standing Up our VMs with Rocky Linux 10.1](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-vm.md)
 2. [Getting Started With Ansible](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-ansible.md)
 3. [Installing Kubernetes using Ansible + Kubeadm](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-k8s.md)
 4. [Configuring a User with Kubernetes RBAC](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/k8s-RBAC.md)
