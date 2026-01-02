@@ -25,7 +25,7 @@
 
     - name: k8s> Install Flannel CNI
       when: inventory_hostname in groups['masters']    
-      command: kubectl apply -f https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/kube-flannel.yaml
+      command: kubectl apply -f https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/conf/kube-flannel.yaml
 
     - name: k8s> Install Helm (v4)
       when: inventory_hostname in groups['masters']    

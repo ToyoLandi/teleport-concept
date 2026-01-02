@@ -14,7 +14,7 @@ Earlier, When you stood up your admin account and ran those commands to write th
 
 
 ## Creating our Namespace
-open a shell with 'kubectl' account and run the following command...
+open a shell with our admin 'kubectl' account and run the following command...
 ```
 kubectl create namespace webservers
 ```
@@ -25,8 +25,8 @@ Thats it!
 
 From your 'sudo' account terminal, `curl` the role and roleBinding down from the repo, prepopulated for "spezzy" in this example. 
 ```
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/role.yaml -o role.yaml
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/roleBinding.yaml -o roleBinding.yaml
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/rbac/role.yaml -o role.yaml
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/rbac/roleBinding.yaml -o roleBinding.yaml
 ```
 > If you are using these are *templates* be sure to modify the values within the role and roleBinding to match your deployment. 
 
@@ -35,7 +35,6 @@ And apply this role and Rolebinding using `kubectl`
 kubectl apply -f role.yaml
 kubectl apply -f roleBinding.yaml
 ```
-
 
 ## Generating our User Certificate
 
@@ -47,7 +46,7 @@ openssl genrsa -out spezzy.key
 ```
 Then create a CSR with our key, declaring the username and group in the CN and O fields...
 ```
-openssl req -new -key spezzy.key -our spezzy.csr -subj "/CN=spezzy/O=webdevs"
+openssl req -new -key spezzy.key -out spezzy.csr -subj "/CN=spezzy/O=webdevs"
 ```
 Then using your CA certificate and key generated automatically by `kubeadm` under '/etc/kubernetes/pki/ca.crt' and 'etc/kubernetes/pki/ca.key', sign the CSR, setting an expiration using `-days 365`...
 ```
@@ -60,14 +59,18 @@ You now have a user cert named 'spezzy.crt' ready to be converted to BASE64 for 
 
 From the same 'sudo' account user, curl the template file from the repo so we can make our edits...
 ```
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/kubectl-config.yaml -o kubectl-config.yaml
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/rbac/kubeconfig-template -o kubeconfig-template.yaml
 ```
 > Alternatively, you can `cp` and edit using `vi` the current kubernetes-admin config under '~/.kube/config'
 
 Using `vi` or `nano`, edit the values in CAPS to their proper values, and save the config. The X_BASE64 cert values can be generated using the below commands. 
 ```
 echo "$(cat /etc/kubernetes/pki/ca.crt)" | base64 -w 0
+```
+```
 echo "$(cat spezzy.crt)" | base64 -w 0
+```
+```
 echo "$(cat spezzy.key)" | base64 -w 0
 ```
 > I like to copy these to a local notepad on my local machine to make this a little easier - **BE SURE YOUR BASE64 STRINGS ARE ON ONE LINE**
@@ -81,7 +84,26 @@ The last step is to copy the kubectl-config.yaml file to '~/.kube/config' for th
 sudo useradd -m spezzy
 sudo passwd spezzy
 sudo mkdir /home/spezzy/.kube
-sudo cp kubectl-config.yaml /home/spezzy/.kube/config
+sudo cp kubeconfig-template /home/spezzy/.kube/config
+```
+
+## Testing Our New User
+Jump over to "spezzy's" terminal and lets try to run some `kubectl` commands.
+```
+su spezzy
+```
+Then try to run `get pods` against ALL namespaces - this should get blocked.
+```
+kubectl get pods -A
+```
+Now try to run the same just for our webservers group - We should get "No resources found in webservers namespace." This means we are limited to webservers like we expect!
+```
+kubectl get pods -n webservers
+```
+
+`helm` will inherit your permissions from your kubeconfig which you can test with the below, which will return an empty list... for now.
+```
+helm list -n webservers
 ```
 
 ## What's Next?

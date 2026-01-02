@@ -4,6 +4,6 @@ metadata:
   namespace: webservers
   name: spezzys-rwx-role
 rules:
-- apiGroups: ["", "batch", "extensions", "apps"]
+- apiGroups: ["", "batch", "extensions", "apps", "cert-manager.io"]
   resources: ["*"]
   verbs: ["*"]

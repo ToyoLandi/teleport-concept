@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: webservers-ca
+  namespace: webservers
+spec:
+  isCA: true
+  commonName: webservers-ca
+  subject:
+    organizations:
+      - Toyolandi Demo inc.
+    organizationalUnits:
+      - Widgets
+  secretName: webservers-ca-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: selfsigned-issuer
+    kind: Issuer
+    group: cert-manager.io

@@ -1,0 +1,33 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: webservers-server
+  namespace: webservers
+spec:
+  secretName: webservers-server-tls
+  isCA: false
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+  - "webservers-server.webservers.svc.cluster.local"
+  - "webservers-server"
+  issuerRef:
+    name: webservers-ca-issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: webservers-client
+  namespace: webservers
+spec:
+  secretName: webservers-client-tls
+  isCA: false
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+  - "webservers-client.webservers.svc.cluster.local"
+  - "webservers-client"
+  issuerRef:
+    name: webservers-ca-issuer

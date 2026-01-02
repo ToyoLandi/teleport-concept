@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: webservers-ca-issuer
+  namespace: webservers
+spec:
+  ca:
+    secretName: webservers-ca-secret

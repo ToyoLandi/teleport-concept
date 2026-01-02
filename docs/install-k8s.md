@@ -40,7 +40,7 @@ By the end of this section, we will...
 1.  From the 'ansible' user shell, `curl` the kubeadm-conf.j2 kubeadm config template and init-k8s.yaml playbook to our '~/ansible' dir. 
 ```
 curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/ansible/playbooks/init-k8s.yaml -o ~/ansible/init-k8s.yaml
-curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/kubeadm-conf.j2 -o ~/ansible/kubeadm-conf.j2
+curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/main/kubernetes/conf/kubeadm-conf.j2 -o ~/ansible/kubeadm-conf.j2
 ```
 2. Run our 'init-k8s' playbook to initialize our Cluster, and join our workers. 
 ```
