@@ -7,6 +7,8 @@
 # This script should be called by a 'root'/'wheel' user -- we will handle user
 # context within the script running commands under the created 'ansible' user
 # where nessicary. 
+#
+# Written by Collin Spears (ToyoLandi) 
 
 import os
 import sys
