@@ -46,4 +46,12 @@ ansible -i ~/ansible/hosts.yaml all -m ping
 ```
 
 ## What's Next?
-At this point, we can start building our empire quickly using Ansible. It's time to proceed to our Kubernetes deployment under the "installk8s" guide in the repo.
+At this point, we can start building our empire quickly using Ansible. It's time to proceed to our Kubernetes deployment in [Installing Kubernetes using Ansible + Kubeadm](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-k8s.md)
+
+
+## Table of Contents
+1. [Standing Up our VMs with Rocky Linux 10.1](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-vms.md)
+2. [Getting Started With Ansible](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-ansible.md)
+3. [Installing Kubernetes using Ansible + Kubeadm](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-k8s.md)
+4. [Configuring a User with Kubernetes RBAC](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/k8s-RBAC.md)
+5. [Using Helm to deploy our Nginx Website w/ Cert-Manager](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-nginx.md)

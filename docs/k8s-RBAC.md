@@ -1,4 +1,4 @@
-# Kubernetes RBAC
+# Configuring a User with Kubernetes RBAC
 
 What if we want other users (Devs, App Owners, etc) to have the freedom to deploy workloads in an assigned namespace, but we dont want them to be able to break our entire Kubernetes deployment? This is where K8s RBAC comes in handy. 
 
@@ -107,4 +107,12 @@ helm list -n webservers
 ```
 
 ## What's Next?
-We now have a new kubernetes user (spezzy) that is scoped to the new 'webservers' namespace, but have no web servers! Proceed to the next section and give spezzy some work to do by configuring NGINX with cert-manager.
+We now have a new kubernetes user (spezzy) that is scoped to the new 'webservers' namespace, but have no web servers! Proceed to the [Using Helm to deploy our Nginx Website w/ Cert-Manager](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-nginx.md) section and give spezzy some work to do by configuring NGINX with cert-manager.
+
+
+## Table of Contents
+1. [Standing Up our VMs with Rocky Linux 10.1](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-vms.md)
+2. [Getting Started With Ansible](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-ansible.md)
+3. [Installing Kubernetes using Ansible + Kubeadm](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-k8s.md)
+4. [Configuring a User with Kubernetes RBAC](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/k8s-RBAC.md)
+5. [Using Helm to deploy our Nginx Website w/ Cert-Manager](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-nginx.md)
