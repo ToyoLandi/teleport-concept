@@ -17,7 +17,7 @@ Included in this repo is a custom python3 script to easily setup Ansible on all 
 There are several sections to this guide intended to be followed in order, all documented under the "docs" directory to keep the README here more concise. If something isnt making sense, check the previous page in case you overlooked a step or note. Refer to the Table of Contents below for an ordered list of building this solution from scratch.
 
 ## Table of Contents
-1. [Standing Up our VMs with Rocky Linux 10.1](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-vms.md)
+1. [Standing Up our VMs with Rocky Linux 10.1](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-vm.md)
 2. [Getting Started With Ansible](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-ansible.md)
 3. [Installing Kubernetes using Ansible + Kubeadm](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-k8s.md)
 4. [Configuring a User with Kubernetes RBAC](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/k8s-RBAC.md)
