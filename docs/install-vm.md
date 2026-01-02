@@ -1,4 +1,4 @@
-# Standing up our VMs with Rocky Linux 10.1
+# Standing up our VMs with Rocky Linux 10.1-minimal
 
 Happy to give Rocky a go? Here is how we configure our VM's.
 
@@ -31,3 +31,14 @@ Happy to give Rocky a go? Here is how we configure our VM's.
 5. Finally, Launch our Installation using the "Begin Installation" Button on the bottom right -rebooting the VM's with the "Reboot System" button once the installer completes! If you haven't already, repeat steps 3 + 4 for our other "challenger-worker-1" and "challenger-worker-2" nodes adjusting the Host Name and IP addressing as necessary. 
    
 6. (IF YOU ELECTED DHCP RESERVATIONS) - It is very important to reserve the IP's fetched by the VM's during the installation before you proceed, otherwise we will face connectivity and certificate woes if our nodes fetch a different IP in the near future. 
+
+## What's Next?
+THERE ALIVE! Let's proceed to the [Getting Started With Ansible](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-ansible.md) section to continue with our deployment.
+
+
+## Table of Contents
+1. [Standing Up our VMs with Rocky Linux 10.1](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-vms.md)
+2. [Getting Started With Ansible](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-ansible.md)
+3. [Installing Kubernetes using Ansible + Kubeadm](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-k8s.md)
+4. [Configuring a User with Kubernetes RBAC](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/k8s-RBAC.md)
+5. [Using Helm to deploy our Nginx Website w/ Cert-Manager](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-nginx.md)

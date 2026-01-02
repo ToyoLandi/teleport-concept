@@ -1,4 +1,4 @@
-# Deploying NGINX and Cert-Manager
+# Using Helm to deploy our Nginx Website w/ Cert-Manager
 
 ## Setting up Cert-Manager
 
@@ -54,12 +54,17 @@ We will use "webservers-server-tls" for our NGINX deployment in the next section
 
 
 ## Installing NGINX
-1. Login to `docker.io` so we can pull the "bitnami/nginx" image.
+1. Login to `docker.io` so we can pull the "bitnami/nginx" image from docker hub.
 ```
 helm registry login registry-1.docker.io -u <your hub.docker.com username>
 ```
 
-2. Run the following to pull the `nginx-values.yaml`, and install `nginx` using `helm` and our defined values.yaml. This 'nginx-values.yaml' is configured too...
+2. Add the bitnami repo to helm.
+```
+helm repo add bitnami https://charts.bitnami.com/bitnami
+```
+
+3. Run the following to pull the `nginx-values.yaml`, and install `nginx` using `helm` and our defined values.yaml. This 'nginx-values.yaml' is configured too...
 
 - Enable TLS using the "webservers-server-tls" secret
 - Deploy two replica-sets (one per node)
@@ -72,3 +77,14 @@ curl https://raw.githubusercontent.com/ToyoLandi/teleport-concept/refs/heads/mai
 
 helm install nginx-demo bitnami/nginx -f nginx-values.yaml -n webservers
 ```
+
+## What's Next?
+An ambitious one you are. I have nothing more for you in this guide. However this is just a simple deployment, Im sure you can find some great use's for your new cluster! Just dont forget me!
+
+
+## Table of Contents
+1. [Standing Up our VMs with Rocky Linux 10.1](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-vms.md)
+2. [Getting Started With Ansible](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-ansible.md)
+3. [Installing Kubernetes using Ansible + Kubeadm](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-k8s.md)
+4. [Configuring a User with Kubernetes RBAC](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/k8s-RBAC.md)
+5. [Using Helm to deploy our Nginx Website w/ Cert-Manager](https://github.com/ToyoLandi/teleport-concept/blob/main/docs/install-nginx.md)
